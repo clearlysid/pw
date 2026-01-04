@@ -6,13 +6,18 @@
   "private": false,
   "type": "module",
   "scripts": {
-    "dev": "bun scripts/build.js serve",
-    "build": "bun scripts/build.js",
-    "sync": "bun scripts/sync-notes.js",
-    "prod": "bun scripts/sync-notes.js && NODE_ENV=production bun scripts/build.js"
+    "dev": "bun scripts/build.ts generate && bun dist/index.html",
+    "build": "bun scripts/build.ts build",
+    "sync": "bun scripts/sync-notes.ts"
   },
   "dependencies": {
+    "adm-zip": "^0.5.16",
     "dropbox": "^10.34.0",
     "markdown-it": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.6",
+    "@types/markdown-it": "^14.0.0",
+    "bun-types": "latest"
   }
 }

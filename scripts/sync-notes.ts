@@ -1,8 +1,8 @@
 import { Dropbox } from "dropbox";
-import { mkdir, rm, writeFile, readdir } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 import { existsSync } from "fs";
 import { join } from "path";
-import { unzipSync } from "bun";
+import AdmZip from "adm-zip";
 
 const DROPBOX_TOKEN = process.env.DROPBOX_TOKEN;
 const BLOG_DIR = "/Notes/blog";
@@ -21,10 +21,12 @@ async function syncNotes() {
   try {
     // Download zip from Dropbox
     const response = await dbx.filesDownloadZip({ path: BLOG_DIR });
-    const buffer = response.result.fileBinary;
+    const result = response.result as unknown as { fileBinary: Buffer };
+    const buffer = Buffer.from(result.fileBinary);
 
-    // Extract zip using Bun's built-in unzip
-    const files = unzipSync(buffer);
+    // Extract zip
+    const zip = new AdmZip(buffer);
+    const entries = zip.getEntries();
 
     // Ensure destination exists
     if (!existsSync(DEST)) {
@@ -33,15 +35,20 @@ async function syncNotes() {
 
     // Write each file
     let count = 0;
-    for (const [path, content] of Object.entries(files)) {
+    for (const entry of entries) {
       // Skip directories and hidden files
-      if (path.endsWith("/") || path.startsWith(".") || path.includes("/."))
+      if (
+        entry.isDirectory ||
+        entry.entryName.startsWith(".") ||
+        entry.entryName.includes("/.")
+      )
         continue;
 
       // Get filename and slugify
-      const filename = path.split("/").pop();
-      if (!filename.endsWith(".md")) continue;
+      const filename = entry.entryName.split("/").pop();
+      if (!filename || !filename.endsWith(".md")) continue;
 
+      const content = entry.getData();
       const slug = filename.replace(/\s+/g, "-").toLowerCase();
       await writeFile(join(DEST, slug), content);
       count++;
@@ -49,7 +56,8 @@ async function syncNotes() {
 
     console.log(`Synced ${count} notes`);
   } catch (err) {
-    console.error("Failed to sync notes:", err.message);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Failed to sync notes:", message);
     process.exit(1);
   }
 }

@@ -1,32 +1,42 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>{{ title }}</title>
-	<meta name="description" content="{{ description }}">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{ title }}</title>
+        <meta name="description" content="{{ description }}" />
 
-	<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
-	<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-	<link rel="stylesheet" href="/assets/main.css">
-</head>
-<body>
-	<article class="note">
-		<header class="note-header">
-			<time class="note-date">{{ date }}</time>
-			<h1 class="note-title">{{ title }}</h1>
-		</header>
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            href="../../public/apple-touch-icon.png"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            href="../../public/favicon-32x32.png"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            href="../../public/favicon-16x16.png"
+        />
+        <link rel="stylesheet" href="../../styles/main.css" />
+    </head>
+    <body>
+        <article class="note">
+            <header class="note-header">
+                <time class="note-date">{{ date }}</time>
+                <h1 class="note-title">{{ title }}</h1>
+            </header>
 
-		<div class="note-content">
-			{{{ content }}}
-		</div>
-	</article>
+            <div class="note-content">{{{ content }}}</div>
+        </article>
 
-	<footer class="footer">
-		&copy; {{ year }} Siddharth Jha
-	</footer>
+        <footer class="footer">&copy; {{ year }} Siddharth Jha</footer>
 
-	<script src="/assets/main.js"></script>
-</body>
+        <script type="module" src="../../js/main.ts"></script>
+    </body>
 </html>
