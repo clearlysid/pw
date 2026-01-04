@@ -1,4 +1,4 @@
-.nt-wrapper {
+.note {
 	width: min(60rem, 100%);
 	display: grid;
 	grid-template-columns: 1fr min(calc(100% - 4rem), 40rem) 1fr;
@@ -9,25 +9,25 @@
 	overflow-x: hidden;
 }
 
-.nt-wrapper > * {
+.note > * {
 	grid-column: 2;
 	width: 100%;
 }
 
-.nt-header {
+.note-header {
 	display: flex;
 	flex-direction: column;
 	margin-bottom: 4rem;
 	position: relative;
 }
 
-.nt-title {
+.note-title {
 	margin-bottom: 0;
 	z-index: 1;
 	filter: drop-shadow(4px 1px #f1f0ec);
 }
 
-.nt-date {
+.note-date {
 	font-size: 1.2rem;
 	line-height: 1.8em;
 	letter-spacing: -0.02em;
@@ -35,71 +35,37 @@
 	margin-bottom: 1.4rem;
 }
 
-.nt-image {
-	position: absolute;
-	bottom: 0;
-	right: -12rem;
-	width: 600px;
-	height: 450px;
-}
-
-.nt-image img {
-	transform: scale(0.9) rotate(6deg);
-	height: 100%;
-	width: 100%;
-	object-fit: cover;
-}
-
 @media (max-width: 720px) {
-	.nt-header {
+	.note-header {
 		position: static;
 		margin-top: 20vw;
 		flex-direction: column-reverse;
 	}
 
-	.nt-title {
+	.note-title {
 		filter: none;
 		width: 100% !important;
 		font-size: 3rem;
 	}
 
-	.nt-date {
+	.note-date {
 		margin-bottom: 0;
 		margin-top: 1rem;
 	}
-
-	.nt-image {
-		position: absolute;
-		top: -2rem;
-		left: 0;
-		bottom: unset;
-		right: unset;
-		width: 100vw;
-		height: 60vw;
-		z-index: -1;
-		overflow: hidden;
-	}
-
-	.nt-image img {
-		transform: scale(1.1) rotate(4deg);
-		height: 90%;
-		width: 100%;
-		object-fit: cover;
-	}
 }
 
-article hr {
+.note-content hr {
 	border: 0;
 	border-bottom: 1px solid lightgray;
 	margin: 30px 0;
 }
 
-article p {
+.note-content p {
 	margin-bottom: 2em;
 }
 
-article p,
-article li {
+.note-content p,
+.note-content li {
 	font-size: 1.1rem;
 	letter-spacing: -0.004em;
 	line-height: 1.8em;
@@ -107,21 +73,18 @@ article li {
 	color: #222;
 }
 
-article footer {
-	margin-bottom: 8rem;
-}
-
-article figure {
+.note-content figure {
 	margin-bottom: 2rem;
 	grid-column: 1 / span 3 !important;
 }
 
-article figure figcaption {
+.note-content figure figcaption {
 	font-size: 0.8rem;
 	text-align: center;
 	margin-top: 0.4rem;
 }
 
+/* Task list checkboxes */
 .task-list {
 	list-style-type: none;
 }
