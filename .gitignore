@@ -5,4 +5,4 @@ dist/
 *.log
 
 # Notes synced from Dropbox (not committed)
-src/notes/*.md
+notes/*.md

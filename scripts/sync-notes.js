@@ -6,7 +6,7 @@ import { unzipSync } from "bun";
 
 const DROPBOX_TOKEN = process.env.DROPBOX_TOKEN;
 const BLOG_DIR = "/Notes/blog";
-const DEST = "src/notes";
+const DEST = "notes";
 
 if (!DROPBOX_TOKEN) {
   console.warn("No DROPBOX_TOKEN found in environment");

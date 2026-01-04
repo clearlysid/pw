@@ -4,15 +4,14 @@ import { existsSync } from "fs";
 import { join, dirname, basename, extname } from "path";
 import markdownIt from "markdown-it";
 
-// Config (paths relative to project root)
-const SRC = "src";
+// Config
 const DIST = "dist";
 const isDev = process.env.NODE_ENV !== "production";
 
 // Markdown setup
 const md = markdownIt({ html: true, linkify: true, typographer: true });
 
-// Simple template engine - just replaces {{ variable }} and {{{ raw }}}
+// Simple template engine - replaces {{ variable }} and {{{ raw }}}
 function render(template, data) {
   let result = template;
 
@@ -52,29 +51,34 @@ function parseFrontmatter(content) {
   return { data: frontmatter, content: match[2] };
 }
 
-// Load all templates
+// Load templates (files prefixed with _)
 async function loadTemplates() {
   const templates = {};
-  const glob = new Glob("**/*.html");
+  const glob = new Glob("_*.html");
 
-  for await (const path of glob.scan(`${SRC}/templates`)) {
-    const name = path.replace(".html", "");
-    templates[name] = await Bun.file(`${SRC}/templates/${path}`).text();
+  for await (const path of glob.scan("pages")) {
+    const name = basename(path, ".html").slice(1); // remove _ prefix
+    templates[name] = await Bun.file(`pages/${path}`).text();
   }
 
   return templates;
 }
 
-// Load data files
+// Load data files (supports .json, .yaml, .yml)
 async function loadData() {
   const data = {};
-  const dataDir = `${SRC}/data`;
 
-  if (existsSync(dataDir)) {
-    const glob = new Glob("*.json");
-    for await (const path of glob.scan(dataDir)) {
-      const name = path.replace(".json", "");
-      data[name] = await Bun.file(`${dataDir}/${path}`).json();
+  if (existsSync("data")) {
+    const glob = new Glob("*.{json,yaml,yml}");
+    for await (const path of glob.scan("data")) {
+      const name = basename(path, extname(path));
+      const file = `data/${path}`;
+
+      if (path.endsWith(".yaml") || path.endsWith(".yml")) {
+        data[name] = (await import(`./../${file}`)).default;
+      } else {
+        data[name] = await Bun.file(file).json();
+      }
     }
   }
 
@@ -99,7 +103,7 @@ async function processPage(filePath, templates, globalData) {
   }
 
   // Determine output path
-  const relativePath = filePath.replace(`${SRC}/pages/`, "");
+  const relativePath = filePath.replace("pages/", "");
   let outPath;
 
   if (data.permalink) {
@@ -133,14 +137,13 @@ async function processPage(filePath, templates, globalData) {
 
 // Build notes from markdown files
 async function buildNotes(templates, globalData) {
-  const notesDir = `${SRC}/notes`;
   const notes = [];
 
-  if (!existsSync(notesDir)) return notes;
+  if (!existsSync("notes")) return notes;
 
   const glob = new Glob("*.md");
-  for await (const path of glob.scan(notesDir)) {
-    const filePath = `${notesDir}/${path}`;
+  for await (const path of glob.scan("notes")) {
+    const filePath = `notes/${path}`;
     const raw = await Bun.file(filePath).text();
     const { data, content } = parseFrontmatter(raw);
 
@@ -183,11 +186,13 @@ async function build() {
   const templates = await loadTemplates();
   const globalData = await loadData();
 
-  // Process pages
+  // Process pages (skip _ prefixed templates)
   const pagesGlob = new Glob("**/*.{html,md}");
-  for await (const path of pagesGlob.scan(`${SRC}/pages`)) {
+  for await (const path of pagesGlob.scan("pages")) {
+    if (basename(path).startsWith("_")) continue;
+
     const { outPath, html } = await processPage(
-      `${SRC}/pages/${path}`,
+      `pages/${path}`,
       templates,
       globalData,
     );
@@ -204,16 +209,16 @@ async function build() {
     await Bun.write(fullPath, note.html);
   }
 
-  // Copy static assets
-  if (existsSync(`${SRC}/static`)) {
-    await cp(`${SRC}/static`, DIST, { recursive: true });
+  // Copy public assets
+  if (existsSync("public")) {
+    await cp("public", DIST, { recursive: true });
   }
 
   // Bundle CSS
   const cssGlob = new Glob("**/*.css");
   let css = "";
-  for await (const path of cssGlob.scan(`${SRC}/css`)) {
-    css += (await Bun.file(`${SRC}/css/${path}`).text()) + "\n";
+  for await (const path of cssGlob.scan("styles")) {
+    css += (await Bun.file(`styles/${path}`).text()) + "\n";
   }
   if (css) {
     await mkdir(`${DIST}/assets`, { recursive: true });
@@ -221,9 +226,9 @@ async function build() {
   }
 
   // Bundle JS
-  if (existsSync(`${SRC}/js/main.js`)) {
+  if (existsSync("js/main.js")) {
     const result = await Bun.build({
-      entrypoints: [`${SRC}/js/main.js`],
+      entrypoints: ["js/main.js"],
       outdir: `${DIST}/assets`,
       minify: !isDev,
       sourcemap: isDev ? "external" : "none",
@@ -264,17 +269,16 @@ async function serve() {
   console.log(`Dev server: http://localhost:${server.port}`);
 
   // Watch for changes
-  const watcher = require("fs").watch(
-    SRC,
-    { recursive: true },
-    async (event, filename) => {
-      console.log(`Change: ${filename}`);
+  const watchDirs = ["pages", "notes", "styles", "js", "public", "data"];
+  const watchers = watchDirs.filter(existsSync).map((dir) =>
+    require("fs").watch(dir, { recursive: true }, async (event, filename) => {
+      console.log(`Change: ${dir}/${filename}`);
       await build();
-    },
+    }),
   );
 
   process.on("SIGINT", () => {
-    watcher.close();
+    watchers.forEach((w) => w.close());
     server.stop();
     process.exit(0);
   });

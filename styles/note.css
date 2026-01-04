@@ -1,0 +1,85 @@
+.note {
+    width: min(60rem, 100%);
+    display: grid;
+    grid-template-columns: 1fr min(calc(100% - 4rem), 40rem) 1fr;
+    padding-top: 10rem;
+    padding-bottom: 4rem;
+    margin: 0 auto;
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
+.note > * {
+    grid-column: 2;
+    width: 100%;
+}
+
+.note-header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 4rem;
+    position: relative;
+}
+
+.note-title {
+    margin-bottom: 0;
+    z-index: 1;
+    filter: drop-shadow(4px 1px #f1f0ec);
+}
+
+.note-date {
+    font-size: 1.2rem;
+    line-height: 1.8em;
+    letter-spacing: -0.02em;
+    color: #c47af2;
+    margin-bottom: 1.4rem;
+}
+
+@media (max-width: 720px) {
+    .note-header {
+        position: static;
+        margin-top: 20vw;
+        flex-direction: column-reverse;
+    }
+
+    .note-title {
+        filter: none;
+        width: 100% !important;
+        font-size: 3rem;
+    }
+
+    .note-date {
+        margin-bottom: 0;
+        margin-top: 1rem;
+    }
+}
+
+.note-content hr {
+    border: 0;
+    border-bottom: 1px solid lightgray;
+    margin: 30px 0;
+}
+
+.note-content p {
+    margin-bottom: 2em;
+}
+
+.note-content p,
+.note-content li {
+    font-size: 1.1rem;
+    letter-spacing: -0.004em;
+    line-height: 1.8em;
+    word-wrap: break-word;
+    color: #222;
+}
+
+.note-content figure {
+    margin-bottom: 2rem;
+    grid-column: 1 / span 3 !important;
+}
+
+.note-content figure figcaption {
+    font-size: 0.8rem;
+    text-align: center;
+    margin-top: 0.4rem;
+}
