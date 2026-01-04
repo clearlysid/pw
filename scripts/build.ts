@@ -2,28 +2,10 @@ import { Glob } from "bun";
 import { mkdir, rm, cp } from "fs/promises";
 import { existsSync } from "fs";
 import { join, dirname, basename, extname } from "path";
-import markdownIt from "markdown-it";
+import MarkdownIt from "markdown-it";
 
 const DIST = "dist";
-const isDev = process.env.NODE_ENV !== "production";
-
-const md = markdownIt({ html: true, linkify: true, typographer: true });
-
-// Types
-interface Frontmatter {
-  layout?: string;
-  title?: string;
-  description?: string;
-  date?: string;
-  slug?: string;
-  permalink?: string;
-  [key: string]: string | undefined;
-}
-
-interface ParsedContent {
-  data: Frontmatter;
-  content: string;
-}
+const md = new MarkdownIt({ html: true, linkify: true, typographer: true });
 
 // Simple template engine
 function render(template: string, data: Record<string, unknown>): string {
@@ -47,19 +29,25 @@ function render(template: string, data: Record<string, unknown>): string {
 }
 
 // Parse frontmatter
-function parseFrontmatter(content: string): ParsedContent {
+function parseFrontmatter(content: string): {
+  data: Record<string, string>;
+  content: string;
+} {
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (!match) return { data: {}, content };
 
-  const frontmatter: Frontmatter = {};
+  const data: Record<string, string> = {};
   match[1].split("\n").forEach((line) => {
     const [key, ...rest] = line.split(":");
     if (key && rest.length) {
-      frontmatter[key.trim()] = rest.join(":").trim().replace(/^["']|["']$/g, "");
+      data[key.trim()] = rest
+        .join(":")
+        .trim()
+        .replace(/^["']|["']$/g, "");
     }
   });
 
-  return { data: frontmatter, content: match[2] };
+  return { data, content: match[2] };
 }
 
 // Load templates
@@ -90,7 +78,7 @@ async function loadData(): Promise<Record<string, unknown>> {
   return data;
 }
 
-// Process pages and notes into dist (HTML only, no CSS/JS bundling)
+// Generate HTML
 async function generateHTML() {
   console.log("Generating HTML...");
 
@@ -102,32 +90,35 @@ async function generateHTML() {
   const globalData = await loadData();
   const baseData = { year: new Date().getFullYear(), ...globalData };
 
-  // Process pages
+  // Process pages (html and md)
   const pagesGlob = new Glob("**/*.{html,md}");
   for await (const path of pagesGlob.scan("pages")) {
     if (basename(path).startsWith("_")) continue;
 
-    const filePath = `pages/${path}`;
     const ext = extname(path);
-    const raw = await Bun.file(filePath).text();
+    const raw = await Bun.file(`pages/${path}`).text();
     const { data, content } = parseFrontmatter(raw);
 
     const rendered = ext === ".md" ? md.render(content) : content;
 
-    // Output path
     let outPath: string;
     if (data.permalink) {
-      outPath = data.permalink.endsWith("/") ? `${data.permalink}index.html` : data.permalink;
+      outPath = data.permalink.endsWith("/")
+        ? `${data.permalink}index.html`
+        : data.permalink;
     } else if (ext === ".md") {
       outPath = path.replace(".md", "/index.html");
     } else {
       outPath = path;
     }
 
-    // Apply layout
     const layoutName = data.layout || "default";
     const html = templates[layoutName]
-      ? render(templates[layoutName], { content: rendered, ...baseData, ...data })
+      ? render(templates[layoutName], {
+          content: rendered,
+          ...baseData,
+          ...data,
+        })
       : rendered;
 
     const fullPath = join(DIST, outPath);
@@ -170,14 +161,12 @@ async function generateHTML() {
 const command = process.argv[2];
 
 if (command === "generate") {
-  // Just generate HTML (for use with bun's dev server)
   await generateHTML();
 } else if (command === "build") {
-  // Full production build
   await generateHTML();
 
   // Use Bun's bundler for final build with minification
-  const htmlFiles = [];
+  const htmlFiles: string[] = [];
   const glob = new Glob("**/*.html");
   for await (const path of glob.scan(DIST)) {
     htmlFiles.push(join(DIST, path));
@@ -198,7 +187,6 @@ if (command === "generate") {
 
   console.log("Production build complete");
 } else {
-  // Dev mode - generate then let bun serve handle the rest
   await generateHTML();
-  console.log("\nRun: bun --hot dist/index.html");
+  console.log("\nRun: bun dist/index.html");
 }
