@@ -8,16 +8,10 @@
   "scripts": {
     "dev": "bun scripts/build.ts generate && bun dist/index.html",
     "build": "bun scripts/build.ts build",
-    "sync": "bun scripts/sync-notes.ts"
-  },
-  "dependencies": {
-    "adm-zip": "^0.5.16",
-    "dropbox": "^10.34.0",
-    "markdown-it": "^14.0.0"
+    "sync": "bun scripts/sync-notes.ts",
+    "deploy": "bun sync && bun build && bunx gh-pages -d dist"
   },
   "devDependencies": {
-    "@types/adm-zip": "^0.5.6",
-    "@types/bun": "latest",
-    "@types/markdown-it": "^14.0.0"
+    "@types/bun": "latest"
   }
 }

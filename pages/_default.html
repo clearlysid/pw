@@ -6,30 +6,15 @@
         <title>{{ title }}</title>
         <meta name="description" content="{{ description }}" />
 
-        <link
-            rel="apple-touch-icon"
-            sizes="180x180"
-            href="../public/apple-touch-icon.png"
-        />
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="32x32"
-            href="../public/favicon-32x32.png"
-        />
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="16x16"
-            href="../public/favicon-16x16.png"
-        />
-        <link rel="stylesheet" href="../styles/main.css" />
+        <link rel="icon" type="image/png" href="./favicon.png" />
+        <link rel="stylesheet" href="./styles/main.css" />
     </head>
     <body>
         <div id="content">{{{ content }}}</div>
 
-        <footer class="footer">&copy; {{ year }} Siddharth Jha</footer>
+        <footer class="footer">&copy; 2026, Siddharth Jha.</footer>
 
-        <script type="module" src="../js/main.ts"></script>
+        <script src="https://unpkg.com/lenis@1/dist/lenis.min.js"></script>
+        <script type="module" src="./js/main.js"></script>
     </body>
 </html>

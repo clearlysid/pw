@@ -2,10 +2,7 @@ import { Glob } from "bun";
 import { mkdir, rm, cp } from "fs/promises";
 import { existsSync } from "fs";
 import { join, dirname, basename, extname } from "path";
-import MarkdownIt from "markdown-it";
-
 const DIST = "dist";
-const md = new MarkdownIt({ html: true, linkify: true, typographer: true });
 
 // Simple template engine
 function render(template: string, data: Record<string, unknown>): string {
@@ -99,7 +96,7 @@ async function generateHTML() {
     const raw = await Bun.file(`pages/${path}`).text();
     const { data, content } = parseFrontmatter(raw);
 
-    const rendered = ext === ".md" ? md.render(content) : content;
+    const rendered = ext === ".md" ? Bun.markdown.html(content, { autolinks: true }) : content;
 
     let outPath: string;
     if (data.permalink) {
@@ -127,31 +124,114 @@ async function generateHTML() {
   }
 
   // Process notes
+  const notesMeta: { title: string; slug: string; date: string }[] = [];
+
   if (existsSync("notes")) {
     const notesGlob = new Glob("*.md");
     for await (const path of notesGlob.scan("notes")) {
       const raw = await Bun.file(`notes/${path}`).text();
       const { data, content } = parseFrontmatter(raw);
 
+      if (data.published !== "true") continue;
+
       const slug = data.slug || basename(path, ".md");
-      const rendered = md.render(content);
+
+      // Collect metadata for listing page
+      notesMeta.push({
+        title: data.title || slug,
+        slug,
+        date: data.date || "",
+      });
+
+      // Rewrite Obsidian image embeds to standard markdown
+      const transformed = content.replace(
+        /!\[\[([^\]]+)\]\]/g,
+        (_, ref) => {
+          const slugified = ref.replace(/\s+/g, "-").toLowerCase();
+          return `![](./attachments/${slugified})`;
+        },
+      );
+
+      const rendered = Bun.markdown.html(transformed, { autolinks: true });
+
+      // Format date for display
+      const displayDate = data.date
+        ? new Date(data.date).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : "";
 
       const html = render(templates["note"] || templates["default"], {
         content: rendered,
         title: data.title || slug,
+        date: displayDate,
         ...baseData,
         ...data,
+        date: displayDate,
       });
 
       const fullPath = join(DIST, `notes/${slug}/index.html`);
       await mkdir(dirname(fullPath), { recursive: true });
       await Bun.write(fullPath, html);
     }
+
+    // Generate notes listing page
+    notesMeta.sort((a, b) => (b.date > a.date ? 1 : -1));
+
+    const listHTML = notesMeta
+      .map((note) => {
+        const displayDate = note.date
+          ? new Date(note.date).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : "";
+        return `<li><a href="./${note.slug}/"><span class="note-list-date">${displayDate}</span><h2 class="note-list-title">${note.title}</h2></a></li>`;
+      })
+      .join("\n");
+
+    if (templates["notes-listing"]) {
+      const listingHTML = render(templates["notes-listing"], {
+        content: listHTML,
+        ...baseData,
+      });
+      const listingPath = join(DIST, "notes/index.html");
+      await mkdir(dirname(listingPath), { recursive: true });
+      await Bun.write(listingPath, listingHTML);
+    }
+
+    // Copy attachments to dist
+    if (existsSync("notes/attachments")) {
+      await cp("notes/attachments", join(DIST, "notes/attachments"), {
+        recursive: true,
+      });
+    }
   }
 
   // Copy public assets
   if (existsSync("public")) {
     await cp("public", DIST, { recursive: true });
+  }
+
+  // Copy styles
+  if (existsSync("styles")) {
+    await cp("styles", join(DIST, "styles"), { recursive: true });
+  }
+
+  // Compile JS
+  if (existsSync("js")) {
+    await mkdir(join(DIST, "js"), { recursive: true });
+    const jsResult = await Bun.build({
+      entrypoints: ["js/main.ts"],
+      outdir: join(DIST, "js"),
+      minify: true,
+    });
+    if (!jsResult.success) {
+      console.error("JS build failed:", jsResult.logs);
+    }
   }
 
   console.log("HTML generated");
@@ -164,27 +244,6 @@ if (command === "generate") {
   await generateHTML();
 } else if (command === "build") {
   await generateHTML();
-
-  // Use Bun's bundler for final build with minification
-  const htmlFiles: string[] = [];
-  const glob = new Glob("**/*.html");
-  for await (const path of glob.scan(DIST)) {
-    htmlFiles.push(join(DIST, path));
-  }
-
-  if (htmlFiles.length > 0) {
-    const result = await Bun.build({
-      entrypoints: htmlFiles,
-      outdir: DIST,
-      minify: true,
-    });
-
-    if (!result.success) {
-      console.error("Build failed:", result.logs);
-      process.exit(1);
-    }
-  }
-
   console.log("Production build complete");
 } else {
   await generateHTML();
