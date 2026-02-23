@@ -1,3 +1,5 @@
+import { animate, scroll } from "motion";
+
 document.addEventListener("DOMContentLoaded", () => {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
@@ -39,4 +41,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     requestAnimationFrame(raf);
   }
+
+  // Hero image parallax
+  const heroImg = document.querySelector<HTMLElement>(".hero-image");
+  if (heroImg) {
+    scroll(animate(heroImg, { transform: ["perspective(1200px) rotate(6deg) translateY(0px)", "perspective(1200px) rotate(6deg) translateY(-80px)"] }), {
+      target: heroImg,
+      speed: 1.1,
+    });
+  }
+
+  // Scroll-driven animations for work assets
+  const workAssets = document.querySelectorAll<HTMLElement>(
+    ".work-images video, .work-secondary"
+  );
+
+  workAssets.forEach((el) => {
+    const from = el.dataset.from;
+    if (!from) return;
+    const to = el.style.transform || "none";
+
+    scroll(
+      animate(el, { opacity: [0, 1], transform: [from, to] }, { ease: "easeOut" }),
+      { target: el, offset: ["start end", "start 0.6"] }
+    );
+  });
 });
