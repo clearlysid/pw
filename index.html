@@ -6,65 +6,66 @@
         <title>Siddharth / @clearlysid</title>
         <meta name="description" content="Software Designer, Engineer and Generalist." />
 
-        <link
-            rel="apple-touch-icon"
-            sizes="180x180"
-            href="./apple-touch-icon.png"
-        />
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="32x32"
-            href="./favicon-32x32.png"
-        />
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="16x16"
-            href="./favicon-16x16.png"
-        />
+        <link rel="icon" type="image/png" href="./favicon.png" />
         <link rel="stylesheet" href="./styles/main.css" />
     </head>
     <body>
         <div id="content">
 <main class="home">
-	<section class="home-head">
-		<h1>Siddharth</h1>
-		<p class="script">@clearlysid</p>
-		<p>Software Designer, Engineer and Generalist.</p>
-		<p>These days I build <a href="https://www.helmer.app">Helmer</a> — a bespoke video app, while helping a few friends with their own startups.</p>
-		<p>You'll often find me on long walks, reading memoirs, writing, cooking new recipes or befriending cats.</p>
-		<p>Welcome to my internet corner ~ ᕕ(ᐛ)ᕗ</p>
-		<a class="read-essays-btn" href="./notes/">Read Essays</a>
-		<p class="scroll-hint script">or scroll to explore my work ~</p>
+	<section class="home-hero">
+		<div class="home-head">
+			<h1>Siddharth</h1>
+			<p class="script">@clearlysid</p>
+			<p>Software Designer, Engineer and Generalist.</p>
+			<p>These days I build <a href="https://www.helmer.app">Helmer</a> — a bespoke video app, while helping a few friends with their own startups.</p>
+			<p>You'll often find me on long walks, reading memoirs, writing, cooking new recipes or befriending cats.</p>
+			<p>Welcome to my internet corner ~ ᕕ(ᐛ)ᕗ</p>
+			<a class="read-essays-btn" href="./notes/">Read Essays</a>
+			<p class="scroll-hint script">or scroll to explore my work ~</p>
+		</div>
+		<div class="hero-wrapper">
+			<div class="hero-circular-text">
+				<svg viewBox="0 0 100 100" overflow="visible">
+					<path id="circle-path" d="M 0 50 A 1 1 0 1 0 100 50 A 1 1 0 1 0 0 50" fill="transparent"/>
+					<text>
+						<textPath href="#circle-path" startOffset="0" dominant-baseline="hanging" style="fill: #999; font-size: 14px; font-weight: 600; letter-spacing: 1.5px;">SIDDHARTH ✨ @CLEARLYSID ✨</textPath>
+					</text>
+				</svg>
+			</div>
+			<div class="hero-image">
+				<img src="./img/hero.png" alt="Siddharth">
+			</div>
+		</div>
 	</section>
 
-	<div class="hero-image">
-		<img src="./img/hero.jpg" alt="Siddharth">
-		<div class="hero-ticker">
-			<span>SIDDHARTH ✨ @CLEARLYSID ✨ SIDDHARTH ✨ @CLEARLYSID ✨ SIDDHARTH ✨ @CLEARLYSID ✨ SIDDHARTH ✨ @CLEARLYSID ✨ </span>
-		</div>
-	</div>
-
 	<section class="work-section">
-		<div>
-			<div class="work-entry">
-				<p class="work-date">2020-2024</p>
-				<p class="work-company"><strong>Headout</strong></p>
-				<p class="work-role script">Designer, Engineer & Everything Person</p>
-				<p class="work-desc">Built the design team, shipped many 0 → 1 projects, made prototypes, set up an office and had fun.</p>
+		<div class="work-row">
+			<div class="work-images">
+				<video autoplay muted loop playsinline src="./img/helmer.mp4" data-from="translateY(150px) rotate(-10deg)" style="transform: rotate(-3deg);"></video>
+			</div>
+			<div class="work-text">
+				<div class="work-entry">
+					<p class="work-date">2024-Present</p>
+					<p class="work-company"><strong>Helmer</strong></p>
+					<p class="work-role script">Founder, CEO, Designer</p>
+					<p class="work-desc">Making video storytelling tools for the next generation of designers, creators and educators.</p>
+				</div>
+				<img class="work-secondary" src="./img/helmer.gif" alt="Helmer app preview" data-from="perspective(1200px) translateY(200px) scale(0.9) rotate(12deg)" style="transform: perspective(1200px) scale(0.96) rotate(4deg);">
 			</div>
 		</div>
 
-		<div>
-			<div class="work-entry">
-				<p class="work-date">2024-Present</p>
-				<p class="work-company"><strong>Helmer</strong></p>
-				<p class="work-role script">Founder, CEO, Designer</p>
-				<p class="work-desc">Making video storytelling tools for the next generation of designers, creators and educators.</p>
+		<div class="work-row">
+			<div class="work-text">
+				<div class="work-entry">
+					<p class="work-date">2020-2024</p>
+					<p class="work-company"><strong>Headout</strong></p>
+					<p class="work-role script">Designer, Engineer & Everything Person</p>
+					<p class="work-desc">Built the design team, shipped many 0 → 1 projects, made prototypes, set up an office and had fun.</p>
+				</div>
+				<img class="work-secondary" src="./img/headout.jpg" alt="Headout team" data-from="perspective(1200px) translateY(150px) rotate(-12deg)" style="transform: perspective(1200px) rotate(-5deg);">
 			</div>
-			<div class="work-image">
-				<img src="./img/helmer.gif" alt="Helmer app preview">
+			<div class="work-images">
+				<video autoplay muted loop playsinline src="./img/headout.mp4" data-from="perspective(1200px) translateY(180px) rotate(10deg)" style="transform: perspective(1200px) rotate(4deg);"></video>
 			</div>
 		</div>
 	</section>
@@ -146,8 +147,9 @@
 </main>
 </div>
 
-        <footer class="footer">&copy;2022-25, Siddharth Jha.</footer>
+        <footer class="footer">&copy; 2026, Siddharth Jha.</footer>
 
+        <script src="https://unpkg.com/lenis@1/dist/lenis.min.js"></script>
         <script type="module" src="./js/main.js"></script>
     </body>
 </html>
