@@ -6,37 +6,24 @@
         <title>{{ title }}</title>
         <meta name="description" content="{{ description }}" />
 
-        <link
-            rel="apple-touch-icon"
-            sizes="180x180"
-            href="../../apple-touch-icon.png"
-        />
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="32x32"
-            href="../../favicon-32x32.png"
-        />
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="16x16"
-            href="../../favicon-16x16.png"
-        />
+        <link rel="icon" type="image/png" href="../../favicon.png" />
         <link rel="stylesheet" href="../../styles/main.css" />
     </head>
     <body>
         <article class="note">
+            <a class="back-link" href="../">← All Notes</a>
+
             <header class="note-header">
-                <time class="note-date">{{ date }}</time>
                 <h1 class="note-title">{{ title }}</h1>
+                <p class="note-date">Penned on {{ date }}.</p>
             </header>
 
             <div class="note-content">{{{ content }}}</div>
         </article>
 
-        <footer class="footer">&copy; {{ year }} Siddharth Jha</footer>
+        <footer class="footer">&copy; 2026, Siddharth Jha.</footer>
 
+        <script src="https://unpkg.com/lenis@1/dist/lenis.min.js"></script>
         <script type="module" src="../../js/main.js"></script>
     </body>
 </html>

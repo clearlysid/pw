@@ -124,6 +124,8 @@ async function generateHTML() {
   }
 
   // Process notes
+  const notesMeta: { title: string; slug: string; date: string }[] = [];
+
   if (existsSync("notes")) {
     const notesGlob = new Glob("*.md");
     for await (const path of notesGlob.scan("notes")) {
@@ -133,6 +135,13 @@ async function generateHTML() {
       if (data.published !== "true") continue;
 
       const slug = data.slug || basename(path, ".md");
+
+      // Collect metadata for listing page
+      notesMeta.push({
+        title: data.title || slug,
+        slug,
+        date: data.date || "",
+      });
 
       // Rewrite Obsidian image embeds to standard markdown
       const transformed = content.replace(
@@ -145,16 +154,53 @@ async function generateHTML() {
 
       const rendered = Bun.markdown.html(transformed, { autolinks: true });
 
+      // Format date for display
+      const displayDate = data.date
+        ? new Date(data.date).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : "";
+
       const html = render(templates["note"] || templates["default"], {
         content: rendered,
         title: data.title || slug,
+        date: displayDate,
         ...baseData,
         ...data,
+        date: displayDate,
       });
 
       const fullPath = join(DIST, `notes/${slug}/index.html`);
       await mkdir(dirname(fullPath), { recursive: true });
       await Bun.write(fullPath, html);
+    }
+
+    // Generate notes listing page
+    notesMeta.sort((a, b) => (b.date > a.date ? 1 : -1));
+
+    const listHTML = notesMeta
+      .map((note) => {
+        const displayDate = note.date
+          ? new Date(note.date).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : "";
+        return `<li><a href="./${note.slug}/"><span class="note-list-date">${displayDate}</span><h2 class="note-list-title">${note.title}</h2></a></li>`;
+      })
+      .join("\n");
+
+    if (templates["notes-listing"]) {
+      const listingHTML = render(templates["notes-listing"], {
+        content: listHTML,
+        ...baseData,
+      });
+      const listingPath = join(DIST, "notes/index.html");
+      await mkdir(dirname(listingPath), { recursive: true });
+      await Bun.write(listingPath, listingHTML);
     }
 
     // Copy attachments to dist
