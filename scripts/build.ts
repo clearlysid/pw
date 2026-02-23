@@ -170,6 +170,24 @@ async function generateHTML() {
     await cp("public", DIST, { recursive: true });
   }
 
+  // Copy styles
+  if (existsSync("styles")) {
+    await cp("styles", join(DIST, "styles"), { recursive: true });
+  }
+
+  // Compile JS
+  if (existsSync("js")) {
+    await mkdir(join(DIST, "js"), { recursive: true });
+    const jsResult = await Bun.build({
+      entrypoints: ["js/main.ts"],
+      outdir: join(DIST, "js"),
+      minify: true,
+    });
+    if (!jsResult.success) {
+      console.error("JS build failed:", jsResult.logs);
+    }
+  }
+
   console.log("HTML generated");
 }
 
@@ -180,27 +198,6 @@ if (command === "generate") {
   await generateHTML();
 } else if (command === "build") {
   await generateHTML();
-
-  // Use Bun's bundler for final build with minification
-  const htmlFiles: string[] = [];
-  const glob = new Glob("**/*.html");
-  for await (const path of glob.scan(DIST)) {
-    htmlFiles.push(join(DIST, path));
-  }
-
-  if (htmlFiles.length > 0) {
-    const result = await Bun.build({
-      entrypoints: htmlFiles,
-      outdir: DIST,
-      minify: true,
-    });
-
-    if (!result.success) {
-      console.error("Build failed:", result.logs);
-      process.exit(1);
-    }
-  }
-
   console.log("Production build complete");
 } else {
   await generateHTML();
