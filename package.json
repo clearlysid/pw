@@ -13,5 +13,8 @@
   },
   "devDependencies": {
     "@types/bun": "latest"
+  },
+  "dependencies": {
+    "motion": "^12.34.3"
   }
 }

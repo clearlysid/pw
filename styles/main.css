@@ -211,13 +211,13 @@ a {
 
 .work-row {
     display: grid;
-    grid-template-columns: 1fr 260px;
+    grid-template-columns: 1fr 280px;
     gap: 40px;
     align-items: start;
 }
 
 .work-row:nth-child(2) {
-    grid-template-columns: 260px 1fr;
+    grid-template-columns: 280px 1fr;
 }
 
 .work-entry {
@@ -256,13 +256,17 @@ a {
     color: #222;
 }
 
-.work-images {
+.work-text {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
 }
 
-.work-images img,
+.work-secondary {
+    width: 100%;
+    height: auto;
+}
+
 .work-images video {
     width: 100%;
 }
