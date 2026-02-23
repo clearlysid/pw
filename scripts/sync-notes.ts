@@ -1,65 +1,64 @@
-import { Dropbox } from "dropbox";
-import { mkdir, writeFile } from "fs/promises";
+import { Glob } from "bun";
+import { mkdir, copyFile, rm } from "fs/promises";
 import { existsSync } from "fs";
-import { join } from "path";
-import AdmZip from "adm-zip";
+import { join, basename } from "path";
 
-const DROPBOX_TOKEN = process.env.DROPBOX_TOKEN;
-const BLOG_DIR = "/Notes/blog";
+const VAULT_PATH = process.env.VAULT_PATH;
+const BLOG_DIR = "Notes/blog";
+const ASSETS_DIR = "assets";
 const DEST = "notes";
+const ATTACHMENTS = join(DEST, "attachments");
 
-if (!DROPBOX_TOKEN) {
-  console.warn("No DROPBOX_TOKEN found in environment");
+function slugify(filename: string): string {
+  return filename.replace(/\s+/g, "-").toLowerCase();
+}
+
+if (!VAULT_PATH) {
+  console.error("VAULT_PATH not set");
   process.exit(1);
 }
 
-const dbx = new Dropbox({ accessToken: DROPBOX_TOKEN });
+const blogPath = join(VAULT_PATH, BLOG_DIR);
+const assetsPath = join(VAULT_PATH, ASSETS_DIR);
 
-async function syncNotes() {
-  console.log("Syncing notes from Dropbox...");
+if (!existsSync(blogPath)) {
+  console.error(`Blog dir not found: ${blogPath}`);
+  process.exit(1);
+}
 
-  try {
-    // Download zip from Dropbox
-    const response = await dbx.filesDownloadZip({ path: BLOG_DIR });
-    const result = response.result as unknown as { fileBinary: Buffer };
-    const buffer = Buffer.from(result.fileBinary);
+// Clean and recreate dest
+if (existsSync(DEST)) await rm(DEST, { recursive: true });
+await mkdir(DEST, { recursive: true });
+await mkdir(ATTACHMENTS, { recursive: true });
 
-    // Extract zip
-    const zip = new AdmZip(buffer);
-    const entries = zip.getEntries();
+// Copy markdown files
+const mdGlob = new Glob("*.md");
+const imageRefs = new Set<string>();
+let noteCount = 0;
 
-    // Ensure destination exists
-    if (!existsSync(DEST)) {
-      await mkdir(DEST, { recursive: true });
-    }
+for await (const path of mdGlob.scan(blogPath)) {
+  const content = await Bun.file(join(blogPath, path)).text();
+  const slug = slugify(path);
+  await Bun.write(join(DEST, slug), content);
+  noteCount++;
 
-    // Write each file
-    let count = 0;
-    for (const entry of entries) {
-      // Skip directories and hidden files
-      if (
-        entry.isDirectory ||
-        entry.entryName.startsWith(".") ||
-        entry.entryName.includes("/.")
-      )
-        continue;
-
-      // Get filename and slugify
-      const filename = entry.entryName.split("/").pop();
-      if (!filename || !filename.endsWith(".md")) continue;
-
-      const content = entry.getData();
-      const slug = filename.replace(/\s+/g, "-").toLowerCase();
-      await writeFile(join(DEST, slug), content);
-      count++;
-    }
-
-    console.log(`Synced ${count} notes`);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("Failed to sync notes:", message);
-    process.exit(1);
+  // Collect image references
+  const matches = content.matchAll(/!\[\[([^\]]+)\]\]/g);
+  for (const match of matches) {
+    imageRefs.add(match[1]);
   }
 }
 
-syncNotes();
+// Copy only referenced images
+let imageCount = 0;
+for (const ref of imageRefs) {
+  const src = join(assetsPath, ref);
+  if (existsSync(src)) {
+    await copyFile(src, join(ATTACHMENTS, slugify(ref)));
+    imageCount++;
+  } else {
+    console.warn(`Image not found: ${ref}`);
+  }
+}
+
+console.log(`Synced ${noteCount} notes, ${imageCount} images`);
