@@ -148,7 +148,7 @@ async function generateHTML() {
         /!\[\[([^\]]+)\]\]/g,
         (_, ref) => {
           const slugified = ref.replace(/\s+/g, "-").toLowerCase();
-          return `![](./attachments/${slugified})`;
+          return `![](../attachments/${slugified})`;
         },
       );
 

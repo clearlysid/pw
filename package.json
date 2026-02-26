@@ -6,7 +6,7 @@
   "private": false,
   "type": "module",
   "scripts": {
-    "dev": "bun scripts/build.ts generate && bun dist/index.html",
+    "dev": "bun scripts/build.ts generate && bunx serve dist",
     "build": "bun scripts/build.ts build",
     "sync": "bun scripts/sync-notes.ts",
     "deploy": "bun sync && bun build && bunx gh-pages -d dist"
