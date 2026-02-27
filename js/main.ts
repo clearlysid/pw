@@ -235,7 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Scroll-driven animations for work assets
   const workAssets = document.querySelectorAll<HTMLElement>(
-    ".work-images video, .work-secondary"
+    ".work-row video, .work-secondary"
   );
 
   workAssets.forEach((el) => {
