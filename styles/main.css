@@ -97,7 +97,8 @@ a {
     flex-shrink: 0;
 }
 
-.home-head h1 {
+.home-head h1,
+.notes-page h1 {
     font-size: 81px;
     font-weight: 700;
     letter-spacing: -3px;
@@ -435,15 +436,6 @@ a {
 
 .back-link:hover {
     opacity: 0.6;
-}
-
-.notes-page h1 {
-    font-size: 81px;
-    font-weight: 700;
-    letter-spacing: -3px;
-    line-height: 1;
-    color: #222;
-    margin-bottom: -8px;
 }
 
 .notes-page .subtitle {
