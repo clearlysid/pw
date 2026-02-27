@@ -60,21 +60,6 @@ async function loadTemplates(): Promise<Record<string, string>> {
   return templates;
 }
 
-// Load YAML data
-async function loadData(): Promise<Record<string, unknown>> {
-  const data: Record<string, unknown> = {};
-
-  if (existsSync("data")) {
-    const glob = new Glob("*.{yaml,yml}");
-    for await (const path of glob.scan("data")) {
-      const name = basename(path, extname(path));
-      data[name] = (await import(`../data/${path}`)).default;
-    }
-  }
-
-  return data;
-}
-
 // Generate HTML
 async function generateHTML() {
   console.log("Generating HTML...");
@@ -84,8 +69,7 @@ async function generateHTML() {
   await mkdir(DIST, { recursive: true });
 
   const templates = await loadTemplates();
-  const globalData = await loadData();
-  const baseData = { year: new Date().getFullYear(), ...globalData };
+  const baseData = { year: new Date().getFullYear() };
 
   // Process pages (html and md)
   const pagesGlob = new Glob("**/*.{html,md}");
