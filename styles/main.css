@@ -419,8 +419,6 @@ a {
 }
 
 /* ===== NOTES LISTING PAGE ===== */
-.notes-page {
-}
 
 .back-link {
     display: inline-flex;
@@ -614,9 +612,6 @@ a {
     text-align: center;
     margin-top: 0.4rem;
     color: #999;
-}
-
-.note-content img {
 }
 
 .note-content table {
