@@ -2,6 +2,8 @@ import { animate, scroll } from "motion";
 
 document.addEventListener("DOMContentLoaded", () => {
   const svgNS = "http://www.w3.org/2000/svg";
+
+  // --- Noise overlay ---
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("id", "noise-overlay");
   svg.setAttribute("width", "100%");
@@ -31,6 +33,102 @@ document.addEventListener("DOMContentLoaded", () => {
   svg.appendChild(rect);
 
   document.body.appendChild(svg);
+
+  // --- Hero reveal animation (circular mask with turbulent edges) ---
+  const heroImage = document.querySelector<HTMLElement>(".hero-image");
+  if (heroImage) {
+    const svgEl = document.createElementNS(svgNS, "svg");
+    svgEl.style.position = "absolute";
+    svgEl.setAttribute("width", "0");
+    svgEl.setAttribute("height", "0");
+
+    const defsEl = document.createElementNS(svgNS, "defs");
+
+    // Filter to distort mask circle edges into organic blob
+    const maskFilter = document.createElementNS(svgNS, "filter");
+    maskFilter.setAttribute("id", "mask-warp");
+    maskFilter.setAttribute("x", "-30%");
+    maskFilter.setAttribute("y", "-30%");
+    maskFilter.setAttribute("width", "160%");
+    maskFilter.setAttribute("height", "160%");
+
+    const feTurb = document.createElementNS(svgNS, "feTurbulence");
+    feTurb.setAttribute("type", "turbulence");
+    feTurb.setAttribute("baseFrequency", "5");
+    feTurb.setAttribute("numOctaves", "1");
+    feTurb.setAttribute("seed", "5");
+    feTurb.setAttribute("result", "turb");
+
+    const feDisp = document.createElementNS(svgNS, "feDisplacementMap");
+    feDisp.setAttribute("in", "SourceGraphic");
+    feDisp.setAttribute("in2", "turb");
+    feDisp.setAttribute("scale", "0.08");
+    feDisp.setAttribute("xChannelSelector", "R");
+    feDisp.setAttribute("yChannelSelector", "G");
+
+    // Soft blur on the distorted edge
+    const feBlur = document.createElementNS(svgNS, "feGaussianBlur");
+    feBlur.setAttribute("stdDeviation", "0.004");
+
+    maskFilter.append(feTurb, feDisp, feBlur);
+
+    // Mask: white circle on black = visible area
+    const mask = document.createElementNS(svgNS, "mask");
+    mask.setAttribute("id", "hero-mask");
+    mask.setAttribute("maskContentUnits", "objectBoundingBox");
+
+    const circle = document.createElementNS(svgNS, "circle");
+    circle.setAttribute("cx", "0.5");
+    circle.setAttribute("cy", "0.5");
+    circle.setAttribute("r", "0");
+    circle.setAttribute("fill", "white");
+    circle.setAttribute("filter", "url(#mask-warp)");
+
+    mask.appendChild(circle);
+    defsEl.append(maskFilter, mask);
+    svgEl.appendChild(defsEl);
+    document.body.appendChild(svgEl);
+
+    // Apply mask
+    heroImage.style.mask = "url(#hero-mask)";
+
+    // Animate circle radius 0 → 1.0, displacement fades out
+    const duration = 1400;
+    const startTime = performance.now() + 100;
+    const maxDisp = 0.08;
+
+    function easeOutCubic(t: number): number {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function animateReveal(now: number) {
+      const elapsed = now - startTime;
+      if (elapsed < 0) {
+        requestAnimationFrame(animateReveal);
+        return;
+      }
+
+      const raw = Math.min(elapsed / duration, 1);
+      const t = easeOutCubic(raw);
+
+      // Circle radius: 0 → 1.0
+      circle.setAttribute("r", String(t));
+
+      // Displacement decreases as circle grows for cleaner final edge
+      const disp = maxDisp * (1 - t * 0.8);
+      feDisp.setAttribute("scale", String(disp));
+
+      if (raw < 1) {
+        requestAnimationFrame(animateReveal);
+      } else {
+        // Clean up
+        heroImage.style.mask = "";
+        svgEl.remove();
+      }
+    }
+
+    requestAnimationFrame(animateReveal);
+  }
 
   // Smooth scroll
   if (typeof Lenis !== "undefined") {
