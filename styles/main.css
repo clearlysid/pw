@@ -76,12 +76,14 @@ a {
     mask-image: linear-gradient(15deg, transparent 50%, black 100%);
 }
 
-/* ===== HOMEPAGE ===== */
-.home {
+/* ===== CONTAINER ===== */
+.container {
     max-width: calc(850px + 4rem);
     margin: 0 auto;
-    padding: 0 2rem 0;
+    padding: 0 2rem;
 }
+
+/* ===== HOMEPAGE ===== */
 
 .home-hero {
     display: flex;
@@ -166,16 +168,19 @@ a {
     flex: 1;
     min-width: 0;
     margin-top: 80px;
+    padding-top: 2rem;
 }
 
 .hero-image {
     position: relative;
     overflow: hidden;
     transform: perspective(1200px) rotate(6deg);
+    max-width: 366px;
 }
 
 .hero-image img {
     width: 100%;
+    max-width: 366px;
     height: auto;
     display: block;
 }
@@ -405,9 +410,8 @@ a {
 
 /* Footer */
 .footer {
-    max-width: calc(850px + 4rem);
-    margin: 0 auto;
-    padding: 100px 2rem 24px;
+    padding-top: 100px;
+    padding-bottom: 24px;
     font-size: 14px;
     font-weight: 400;
     letter-spacing: -0.2px;
@@ -416,9 +420,6 @@ a {
 
 /* ===== NOTES LISTING PAGE ===== */
 .notes-page {
-    max-width: 850px;
-    margin: 0 auto;
-    padding: 0 2rem 0;
 }
 
 .back-link {
