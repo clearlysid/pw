@@ -130,6 +130,19 @@ document.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(animateReveal);
   }
 
+  // --- Hero text staggered entry ---
+  const homeHead = document.querySelector(".home-head");
+  if (homeHead) {
+    const children = Array.from(homeHead.children) as HTMLElement[];
+    children.forEach((el, i) => {
+      el.style.opacity = "0";
+      const delay = 0.1 + i * 0.05;
+      const spring = { type: "spring" as const, stiffness: 450, damping: 48, mass: 3, delay };
+      animate(el, { opacity: [0, 1] }, { duration: 0.3, delay });
+      animate(el, { x: [70, 0], y: [50, 0], scale: [0.8, 1], rotate: [5, 0] }, spring);
+    });
+  }
+
   // Smooth scroll
   if (typeof Lenis !== "undefined") {
     const lenis = new Lenis();
