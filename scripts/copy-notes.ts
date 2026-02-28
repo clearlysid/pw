@@ -36,16 +36,21 @@ const assetRefs = new Set<string>();
 let noteCount = 0;
 
 for await (const path of mdGlob.scan(BLOG_DIR)) {
-  const content = await Bun.file(join(BLOG_DIR, path)).text();
-  const slug = slugify(path);
-  await Bun.write(join(localNotesFolder, slug), content);
-  noteCount++;
+  let content = await Bun.file(join(BLOG_DIR, path)).text();
 
-  // Collect asset references
+  // Collect asset references before rewriting
   const matches = content.matchAll(/!\[\[([^\]]+)\]\]/g);
   for (const match of matches) {
     assetRefs.add(match[1]);
   }
+
+  // Rewrite Obsidian image embeds to standard markdown
+  content = content.replace(/!\[\[([^\]]+)\]\]/g, (_, ref) => {
+    return `![](../attachments/${slugify(ref)})`;
+  });
+
+  await Bun.write(join(localNotesFolder, slugify(path)), content);
+  noteCount++;
 }
 
 // Copy only referenced assets

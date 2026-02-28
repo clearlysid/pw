@@ -8,8 +8,8 @@
   "scripts": {
     "dev": "bun scripts/build.ts generate && bunx serve dist",
     "build": "bun scripts/build.ts build",
-    "sync": "bun scripts/sync-notes.ts",
-    "deploy": "bun sync && bun build && bunx gh-pages -d dist"
+    "copy-notes": "bun scripts/copy-notes.ts",
+    "deploy": "bun copy-notes && bun run build && bunx gh-pages -d dist"
   },
   "devDependencies": {
     "@types/bun": "^1.3.9"

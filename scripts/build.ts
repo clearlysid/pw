@@ -4,6 +4,15 @@ import { mkdir, rm, cp } from "fs/promises";
 import { join, dirname, basename, extname } from "path";
 const DIST = "dist";
 
+function formatDate(dateStr: string): string {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 // Simple template engine
 function render(template: string, data: Record<string, unknown>): string {
   let result = template;
@@ -116,34 +125,18 @@ async function generateHTML() {
     for await (const path of notesGlob.scan("notes")) {
       const raw = await Bun.file(`notes/${path}`).text();
       const { data, content } = parseFrontmatter(raw);
-
-      if (data.published !== "true") continue;
-
       const slug = data.slug || basename(path, ".md");
 
-      // Collect metadata for listing page
-      notesMeta.push({
-        title: data.title || slug,
-        slug,
-        date: data.date || "",
-      });
+      if (data.published === "true") {
+        notesMeta.push({
+          title: data.title || slug,
+          slug,
+          date: data.date || "",
+        });
+      }
 
-      // Rewrite Obsidian image embeds to standard markdown
-      const transformed = content.replace(/!\[\[([^\]]+)\]\]/g, (_, ref) => {
-        const slugified = ref.replace(/\s+/g, "-").toLowerCase();
-        return `![](../attachments/${slugified})`;
-      });
-
-      const rendered = Bun.markdown.html(transformed, { autolinks: true });
-
-      // Format date for display
-      const displayDate = data.date
-        ? new Date(data.date).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })
-        : "";
+      const rendered = Bun.markdown.html(content, { autolinks: true });
+      const displayDate = formatDate(data.date || "");
 
       const html = render(templates["note"] || templates["default"], {
         content: rendered,
@@ -163,14 +156,7 @@ async function generateHTML() {
 
     const listHTML = notesMeta
       .map((note) => {
-        const displayDate = note.date
-          ? new Date(note.date).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })
-          : "";
-        return `<li><a href="./${note.slug}/"><span class="note-list-date">${displayDate}</span><h2 class="note-list-title">${note.title}</h2></a></li>`;
+        return `<li><a href="./${note.slug}/"><span class="note-list-date">${formatDate(note.date)}</span><h2 class="note-list-title">${note.title}</h2></a></li>`;
       })
       .join("\n");
 
@@ -218,15 +204,4 @@ async function generateHTML() {
   console.log("HTML generated");
 }
 
-// Main
-const command = process.argv[2];
-
-if (command === "generate") {
-  await generateHTML();
-} else if (command === "build") {
-  await generateHTML();
-  console.log("Production build complete");
-} else {
-  await generateHTML();
-  console.log("\nRun: bun dist/index.html");
-}
+await generateHTML();
