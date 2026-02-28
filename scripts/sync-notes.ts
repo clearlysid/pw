@@ -3,9 +3,7 @@ import { mkdir, copyFile, rm } from "fs/promises";
 import { existsSync } from "fs";
 import { join, basename } from "path";
 
-const VAULT_PATH = process.env.VAULT_PATH;
-const BLOG_DIR = "Notes/blog";
-const ASSETS_DIR = "assets";
+const { BLOG_DIR, ASSETS_DIR } = process.env;
 const DEST = "notes";
 const ATTACHMENTS = join(DEST, "attachments");
 
@@ -13,13 +11,13 @@ function slugify(filename: string): string {
   return filename.replace(/\s+/g, "-").toLowerCase();
 }
 
-if (!VAULT_PATH) {
-  console.error("VAULT_PATH not set");
+if (!BLOG_DIR || !ASSETS_DIR) {
+  console.error("Missing env vars. See .env.example");
   process.exit(1);
 }
 
-const blogPath = join(VAULT_PATH, BLOG_DIR);
-const assetsPath = join(VAULT_PATH, ASSETS_DIR);
+const blogPath = BLOG_DIR;
+const assetsPath = ASSETS_DIR;
 
 if (!existsSync(blogPath)) {
   console.error(`Blog dir not found: ${blogPath}`);
