@@ -1,10 +1,9 @@
 PERSONAL WEBSITE
 
-For the past few years it's lived on Framer. Moved it back here since
-I'm not actively tweaking the design knobs and sliders here too much.
+For the past few years it lived on Framer. I moved it back here since
+I don't find myself tweaking the knobs and sliders too much.
 
-- I write with Obsidian
-- All my notes live in Dropbox
-- They're pulled here by Bun
-- Styles with vanilla CSS
-- Deployed on Github Pages
+- Writings in Obsidian
+- Stored on Dropbox
+- Bundles with Bun
+- Published on Github Pages

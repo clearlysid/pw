@@ -1,6 +1,6 @@
 import { Glob } from "bun";
-import { mkdir, rm, cp } from "fs/promises";
 import { existsSync } from "fs";
+import { mkdir, rm, cp } from "fs/promises";
 import { join, dirname, basename, extname } from "path";
 const DIST = "dist";
 
@@ -80,7 +80,8 @@ async function generateHTML() {
     const raw = await Bun.file(`pages/${path}`).text();
     const { data, content } = parseFrontmatter(raw);
 
-    const rendered = ext === ".md" ? Bun.markdown.html(content, { autolinks: true }) : content;
+    const rendered =
+      ext === ".md" ? Bun.markdown.html(content, { autolinks: true }) : content;
 
     let outPath: string;
     if (data.permalink) {
@@ -128,13 +129,10 @@ async function generateHTML() {
       });
 
       // Rewrite Obsidian image embeds to standard markdown
-      const transformed = content.replace(
-        /!\[\[([^\]]+)\]\]/g,
-        (_, ref) => {
-          const slugified = ref.replace(/\s+/g, "-").toLowerCase();
-          return `![](../attachments/${slugified})`;
-        },
-      );
+      const transformed = content.replace(/!\[\[([^\]]+)\]\]/g, (_, ref) => {
+        const slugified = ref.replace(/\s+/g, "-").toLowerCase();
+        return `![](../attachments/${slugified})`;
+      });
 
       const rendered = Bun.markdown.html(transformed, { autolinks: true });
 
@@ -150,7 +148,6 @@ async function generateHTML() {
       const html = render(templates["note"] || templates["default"], {
         content: rendered,
         title: data.title || slug,
-        date: displayDate,
         ...baseData,
         ...data,
         date: displayDate,
