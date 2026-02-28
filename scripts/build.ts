@@ -156,7 +156,7 @@ async function generateHTML() {
 
     const listHTML = notesMeta
       .map((note) => {
-        return `<li><a href="./${note.slug}/"><span class="note-list-date">${formatDate(note.date)}</span><h2 class="note-list-title">${note.title}</h2></a></li>`;
+        return `<li><a href="/notes/${note.slug}/"><span class="note-list-date">${formatDate(note.date)}</span><h2 class="note-list-title">${note.title}</h2></a></li>`;
       })
       .join("\n");
 
