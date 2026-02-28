@@ -513,6 +513,12 @@ a {
     margin-bottom: 48px;
 }
 
+.note-cover {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 48px;
+}
+
 .note-title {
     font-size: 56px;
     font-weight: 700;

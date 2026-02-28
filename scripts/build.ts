@@ -135,7 +135,14 @@ async function generateHTML() {
         });
       }
 
-      const rendered = Bun.markdown.html(content, { autolinks: true });
+      // Extract first image as cover image
+      const coverMatch = content.match(/^!\[.*?\]\((.*?)\)/m);
+      const coverImage = coverMatch ? coverMatch[1] : "";
+      const noteContent = coverMatch
+        ? content.replace(coverMatch[0], "").trimStart()
+        : content;
+
+      const rendered = Bun.markdown.html(noteContent, { autolinks: true });
       const displayDate = formatDate(data.date || "");
 
       const html = render(templates["note"] || templates["default"], {
@@ -144,6 +151,9 @@ async function generateHTML() {
         ...baseData,
         ...data,
         date: displayDate,
+        coverImageHTML: coverImage
+          ? `<img class="note-cover" src="${coverImage}" alt="" />`
+          : "",
       });
 
       const fullPath = join(DIST, `notes/${slug}/index.html`);
