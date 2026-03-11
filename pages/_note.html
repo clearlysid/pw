@@ -13,12 +13,13 @@
         <article class="note">
             <a class="back-link" href="../">← All Notes</a>
 
-            <header class="note-header">
-                <h1 class="note-title">{{ title }}</h1>
-                <p class="note-date">Penned on {{ date }}.</p>
-            </header>
-
-            {{{ coverImageHTML }}}
+            <div class="note-hero">
+                <header class="note-header">
+                    <h1 class="note-title">{{ title }}</h1>
+                    <p class="note-date">Penned on {{ date }}.</p>
+                </header>
+                {{{ coverImageHTML }}}
+            </div>
 
             <div class="note-content">{{{ content }}}</div>
         </article>
