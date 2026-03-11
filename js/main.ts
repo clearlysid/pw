@@ -117,7 +117,22 @@ document.addEventListener("DOMContentLoaded", () => {
     heroImage.appendChild(canvas);
     heroImg.style.opacity = "0";
 
-    const gl = canvas.getContext("webgl", { premultipliedAlpha: false, alpha: true })!;
+    const gl = canvas.getContext("webgl", { premultipliedAlpha: false, alpha: true });
+    if (!gl) {
+      // WebGL unavailable — show image immediately and skip shader reveal
+      heroImg.style.opacity = "";
+      canvas.remove();
+      if (homeHead) {
+        const children = Array.from(homeHead.children) as HTMLElement[];
+        children.forEach((el, i) => {
+          const delay = 0.1 + i * 0.05;
+          const spring = { type: "spring" as const, stiffness: 450, damping: 48, mass: 3, delay };
+          animate(el, { opacity: [0, 1] }, { duration: 0.3, delay });
+          animate(el, { x: [70, 0], y: [50, 0], scale: [0.8, 1], rotate: [5, 0] }, spring);
+        });
+      }
+      return;
+    }
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -229,7 +244,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (heroParallax) {
     scroll(animate(heroParallax, { transform: ["perspective(1200px) rotate(6deg) translateY(0px)", "perspective(1200px) rotate(6deg) translateY(-80px)"] }), {
       target: heroParallax,
-      speed: 1.1,
+      offset: ["start end", "end start"],
     });
   }
 
