@@ -161,7 +161,7 @@ async function generateHTML() {
       await Bun.write(fullPath, html);
     }
 
-    // Generate notes listing page
+    // Generate all notes page
     notesMeta.sort((a, b) => (b.date > a.date ? 1 : -1));
 
     const listHTML = notesMeta
@@ -170,8 +170,8 @@ async function generateHTML() {
       })
       .join("\n");
 
-    if (templates["notes-listing"]) {
-      const listingHTML = render(templates["notes-listing"], {
+    if (templates["notes"]) {
+      const listingHTML = render(templates["notes"], {
         content: listHTML,
         ...baseData,
       });
