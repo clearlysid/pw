@@ -8,7 +8,7 @@
   "license": "WTFPL",
   "private": false,
   "scripts": {
-    "dev": "bun scripts/build.ts generate && bunx serve dist",
+    "dev": "bun scripts/dev.ts",
     "build": "bun scripts/build.ts build",
     "copy-notes": "bun scripts/copy-notes.ts",
     "deploy": "bun copy-notes && bun run build && bunx gh-pages -d dist"

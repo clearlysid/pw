@@ -1,9 +1,14 @@
 @import url("https://fonts.googleapis.com/css2?family=Lora:ital,wght@1,400&display=swap");
 
+@view-transition {
+    navigation: auto;
+}
+
 :root {
     --background: #f7f3eb;
     --ink: #171712;
     --muted: #aaa69e;
+    --nav-content-gap: 64px;
     --rule: #bcb7ad;
     --column: 740px;
     --page-padding: 24px;
@@ -56,7 +61,60 @@ a {
 .site-header {
     padding-top: 46px;
     position: relative;
+    view-transition-name: site-nav;
     z-index: 40;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+    animation: page-leave 180ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(root) {
+    animation: page-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+::view-transition-group(site-nav) {
+    animation: none;
+    z-index: 40;
+}
+
+::view-transition-old(site-nav) {
+    animation: none;
+    opacity: 0;
+}
+
+::view-transition-new(site-nav) {
+    animation: none;
+    opacity: 1;
+}
+
+@keyframes page-leave {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+}
+
+@keyframes page-enter {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .site-nav {
@@ -100,7 +158,7 @@ a {
 
 /* Home */
 .home-intro {
-    margin-top: 78px;
+    margin-top: var(--nav-content-gap);
 }
 
 .home-intro h1,
@@ -208,7 +266,7 @@ a {
 
 /* Notes listing */
 .notes-page {
-    margin-top: 96px;
+    margin-top: var(--nav-content-gap);
     padding-bottom: 120px;
 }
 
@@ -286,7 +344,7 @@ a {
 /* Note detail */
 .note {
     margin-bottom: 120px;
-    margin-top: 88px;
+    margin-top: var(--nav-content-gap);
 }
 
 .note-hero {
@@ -569,5 +627,13 @@ pre code {
     *::before,
     *::after {
         transition-duration: 0.01ms !important;
+    }
+
+    ::view-transition-old(root),
+    ::view-transition-new(root),
+    ::view-transition-group(site-nav),
+    ::view-transition-old(site-nav),
+    ::view-transition-new(site-nav) {
+        animation: none;
     }
 }

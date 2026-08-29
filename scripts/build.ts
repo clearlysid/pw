@@ -81,7 +81,7 @@ async function loadTemplates(): Promise<Record<string, string>> {
 }
 
 // Generate HTML
-async function generateHTML() {
+export async function generateHTML() {
   console.log("Generating HTML...");
 
   // Clean and create dist
@@ -225,4 +225,6 @@ async function generateHTML() {
   console.log("HTML generated");
 }
 
-await generateHTML();
+if (import.meta.main) {
+  await generateHTML();
+}
