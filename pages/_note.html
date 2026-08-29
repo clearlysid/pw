@@ -5,33 +5,35 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{{ title }}</title>
         <meta name="description" content="{{ description }}" />
-
-        <link rel="icon" type="image/png" href="../../favicon.png" />
-        <link rel="stylesheet" href="../../styles/main.css" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="stylesheet" href="/styles/main.css?v=15" />
     </head>
     <body>
-        <nav class="breadcrumb container">
-            <a href="/">~</a>
-            <span class="breadcrumb-slash">/</span>
-            <a href="/notes/">NOTES</a>
-        </nav>
+        <header class="site-header site-column">
+            <nav class="site-nav" aria-label="Primary navigation">
+                <a class="site-avatar" href="/" aria-label="Home">
+                    <img src="/img/hero.png" alt="" />
+                </a>
+                <a href="/">SID</a>
+                <span aria-hidden="true">/</span>
+                <a class="is-active" href="/notes/" aria-current="page">NOTES</a>
+                <span aria-hidden="true">/</span>
+                <a href="/photos/">PHOTOS</a>
+            </nav>
+        </header>
 
-        <article class="note">
-
+        <article class="note site-column">
             <div class="note-hero">
                 <header class="note-header">
                     <h1 class="note-title">{{ title }}</h1>
-                    <p class="note-date">Penned on {{ date }}.</p>
+                    <p class="note-date">{{ date }}</p>
                 </header>
                 {{{ coverImageHTML }}}
             </div>
-
             <div class="note-content">{{{ content }}}</div>
         </article>
 
-        <footer class="footer container">&copy; 2026, Siddharth Jha.</footer>
-
         <script src="https://unpkg.com/lenis@1/dist/lenis.min.js"></script>
-        <script type="module" src="../../js/main.js"></script>
+        <script type="module" src="/js/main.js"></script>
     </body>
 </html>

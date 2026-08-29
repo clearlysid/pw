@@ -13,6 +13,17 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function formatListDate(dateStr: string): string {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return dateStr;
+  const month = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ][date.getUTCMonth()];
+  return `${String(date.getUTCDate()).padStart(2, "0")} ${month} ${String(date.getUTCFullYear()).slice(-2)}`;
+}
+
 // Simple template engine
 function render(template: string, data: Record<string, unknown>): string {
   let result = template;
@@ -166,7 +177,7 @@ async function generateHTML() {
 
     const listHTML = notesMeta
       .map((note) => {
-        return `<li><a href="/notes/${note.slug}/"><span class="note-list-date">${formatDate(note.date)}</span><h2 class="note-list-title">${note.title}</h2></a></li>`;
+        return `<li><a href="/notes/${note.slug}/"><h2 class="note-list-title">${note.title}</h2><span class="note-list-rule" aria-hidden="true"></span><time class="note-list-date" datetime="${note.date}">${formatListDate(note.date)}</time></a></li>`;
       })
       .join("\n");
 

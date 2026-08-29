@@ -2,19 +2,16 @@
   "name": "pw",
   "version": "11.0.0",
   "author": "Siddharth <siddharth99c@gmail.com>",
+  "devDependencies": {
+    "@types/bun": "^1.3.9"
+  },
   "license": "WTFPL",
   "private": false,
-  "type": "module",
   "scripts": {
     "dev": "bun scripts/build.ts generate && bunx serve dist",
     "build": "bun scripts/build.ts build",
     "copy-notes": "bun scripts/copy-notes.ts",
     "deploy": "bun copy-notes && bun run build && bunx gh-pages -d dist"
   },
-  "devDependencies": {
-    "@types/bun": "^1.3.9"
-  },
-  "dependencies": {
-    "motion": "^12.34.3"
-  }
+  "type": "module"
 }

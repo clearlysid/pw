@@ -6,10 +6,22 @@
         <title>{{ title }}</title>
         <meta name="description" content="{{ description }}" />
         <link rel="icon" type="image/png" href="/favicon.png" />
-        <link rel="stylesheet" href="/styles/main.css" />
-        <link rel="stylesheet" href="/styles/photos.css" />
+        <link rel="stylesheet" href="/styles/main.css?v=15" />
+        <link rel="stylesheet" href="/styles/photos.css?v=12" />
     </head>
     <body class="photos-body">
+        <header class="site-header site-column">
+            <nav class="site-nav" aria-label="Primary navigation">
+                <a class="site-avatar" href="/" aria-label="Home">
+                    <img src="/img/hero.png" alt="" />
+                </a>
+                <a href="/">SID</a>
+                <span aria-hidden="true">/</span>
+                <a href="/notes/">NOTES</a>
+                <span aria-hidden="true">/</span>
+                <a class="is-active" href="/photos/" aria-current="page">PHOTOS</a>
+            </nav>
+        </header>
         {{{ content }}}
         <script src="https://unpkg.com/lenis@1/dist/lenis.min.js"></script>
         <script type="module" src="/js/main.js"></script>

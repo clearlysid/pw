@@ -3,34 +3,40 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Notes — Siddharth</title>
-        <meta
-            name="description"
-            content="Siddharth's notes, essays & musings"
-        />
-
-        <link rel="icon" type="image/png" href="../favicon.png" />
-        <link rel="stylesheet" href="../styles/main.css" />
+        <title>Notes · Siddharth</title>
+        <meta name="description" content="Notes on code, craft, culture, careers and cats." />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="stylesheet" href="/styles/main.css?v=15" />
     </head>
     <body>
-        <nav class="breadcrumb container">
-            <a href="/">~</a>
-            <span class="breadcrumb-slash">/</span>
-            <span class="breadcrumb-active">NOTES</span>
-        </nav>
+        <header class="site-header site-column">
+            <nav class="site-nav" aria-label="Primary navigation">
+                <a class="site-avatar" href="/" aria-label="Home">
+                    <img src="/img/hero.png" alt="" />
+                </a>
+                <a href="/">SID</a>
+                <span aria-hidden="true">/</span>
+                <a class="is-active" href="/notes/" aria-current="page">NOTES</a>
+                <span aria-hidden="true">/</span>
+                <a href="/photos/">PHOTOS</a>
+            </nav>
+        </header>
 
-        <div class="notes-page container">
-            <h1>Siddharth's</h1>
-            <p class="subtitle script">notes, essays & musings</p>
-
-            <ul class="notes-list">
-                {{{ content }}}
-            </ul>
-        </div>
-
-        <footer class="footer container">&copy; 2026, Siddharth Jha.</footer>
+        <main class="notes-page site-column">
+            <h1>…on code, craft, culture, careers and cats.</h1>
+            <div class="notes-stage">
+                <ul class="notes-list">
+                    {{{ content }}}
+                </ul>
+                <img
+                    class="notes-feature-image"
+                    src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&amp;fit=crop&amp;w=720&amp;q=86"
+                    alt=""
+                />
+            </div>
+        </main>
 
         <script src="https://unpkg.com/lenis@1/dist/lenis.min.js"></script>
-        <script type="module" src="../js/main.js"></script>
+        <script type="module" src="/js/main.js"></script>
     </body>
 </html>
