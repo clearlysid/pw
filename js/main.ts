@@ -1,4 +1,5 @@
 import { animate, scroll } from "motion";
+import { galleryPhotos } from "./gallery-data";
 
 document.addEventListener("DOMContentLoaded", () => {
   const svgNS = "http://www.w3.org/2000/svg";
@@ -263,4 +264,165 @@ document.addEventListener("DOMContentLoaded", () => {
       { target: el, offset: ["start end", "start 0.6"] }
     );
   });
+
+  const gallery = document.querySelector<HTMLElement>("[data-photo-gallery]");
+  const galleryRail = document.querySelector<HTMLElement>("[data-gallery-rail]");
+  const galleryFocusList = document.querySelector<HTMLElement>("[data-gallery-focus-list]");
+
+  if (galleryRail && galleryFocusList) {
+    const randomizedPhotos = [...galleryPhotos];
+    for (let index = randomizedPhotos.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      const current = randomizedPhotos[index];
+      const swap = randomizedPhotos[swapIndex];
+      if (!current || !swap) continue;
+      randomizedPhotos[index] = swap;
+      randomizedPhotos[swapIndex] = current;
+    }
+
+    randomizedPhotos.forEach((photo, index) => {
+      const thumbnail = document.createElement("button");
+      thumbnail.className = `gallery-thumb ${photo.orientation}`;
+      thumbnail.dataset.galleryThumb = String(index);
+      thumbnail.type = "button";
+      thumbnail.setAttribute("aria-label", `View photo ${index + 1}`);
+
+      const thumbnailImage = document.createElement("img");
+      thumbnailImage.alt = "";
+      thumbnailImage.decoding = "async";
+      thumbnailImage.height = photo.orientation === "portrait" ? 240 : 180;
+      thumbnailImage.loading = index < 4 ? "eager" : "lazy";
+      thumbnailImage.src = `https://images.unsplash.com/photo-${photo.id}?auto=format&fit=crop&w=240&q=70`;
+      thumbnailImage.width = photo.orientation === "portrait" ? 180 : 240;
+      thumbnail.appendChild(thumbnailImage);
+      galleryRail.appendChild(thumbnail);
+
+      const focusItem = document.createElement("figure");
+      focusItem.className = "gallery-focus-item";
+      focusItem.dataset.caption = photo.caption;
+      focusItem.dataset.galleryFocus = String(index);
+
+      const focusImage = document.createElement("img");
+      focusImage.alt = photo.alt;
+      focusImage.decoding = "async";
+      focusImage.loading = index === 0 ? "eager" : "lazy";
+      focusImage.src = `https://images.unsplash.com/photo-${photo.id}?auto=format&fit=crop&w=1600&q=86`;
+      focusItem.appendChild(focusImage);
+      galleryFocusList.appendChild(focusItem);
+    });
+  }
+
+  const galleryThumbs = Array.from(
+    document.querySelectorAll<HTMLButtonElement>("[data-gallery-thumb]"),
+  );
+  const galleryFocusItems = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-gallery-focus]"),
+  );
+
+  if (gallery && galleryRail && galleryThumbs.length > 0) {
+    const dockPositions = new Map<HTMLButtonElement, number>();
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let displayedScroll = window.scrollY;
+    let activeIndex = -1;
+
+    const isMobile = () => window.innerWidth <= 768;
+
+    const setActive = (index: number) => {
+      if (index === activeIndex) return;
+      activeIndex = index;
+      galleryThumbs.forEach((thumb, thumbIndex) => {
+        thumb.classList.toggle("is-active", thumbIndex === index);
+      });
+      galleryFocusItems.forEach((item, itemIndex) => {
+        item.classList.toggle("is-active", itemIndex === index);
+      });
+    };
+
+    const sizeGallery = () => {
+      galleryRail.style.transform = "none";
+      const firstThumb = galleryThumbs[0];
+      const lastThumb = galleryThumbs[galleryThumbs.length - 1];
+      if (!firstThumb || !lastThumb) return;
+      if (isMobile()) {
+        galleryRail.style.paddingTop = "0";
+        galleryRail.style.paddingBottom = "0";
+        galleryRail.style.paddingLeft = `${window.innerWidth / 2 - firstThumb.offsetWidth / 2}px`;
+        galleryRail.style.paddingRight = `${window.innerWidth / 2 - lastThumb.offsetWidth / 2}px`;
+      } else {
+        galleryRail.style.paddingLeft = "0";
+        galleryRail.style.paddingRight = "0";
+        galleryRail.style.paddingTop = `${window.innerHeight / 2 - firstThumb.offsetHeight / 2}px`;
+        galleryRail.style.paddingBottom = `${window.innerHeight / 2 - lastThumb.offsetHeight / 2}px`;
+      }
+      const scrollDistance = isMobile()
+        ? Math.max(0, galleryRail.scrollWidth - window.innerWidth)
+        : Math.max(0, galleryRail.scrollHeight - window.innerHeight);
+      gallery.style.height = `${window.innerHeight + scrollDistance}px`;
+    };
+
+    const scrollToThumb = (thumb: HTMLButtonElement) => {
+      const target = isMobile()
+        ? thumb.offsetLeft + thumb.offsetWidth / 2 - window.innerWidth / 2
+        : thumb.offsetTop + thumb.offsetHeight / 2 - window.innerHeight / 2;
+      window.scrollTo({ top: target, behavior: reducedMotion.matches ? "auto" : "smooth" });
+    };
+
+    galleryThumbs.forEach((thumb) => {
+      thumb.addEventListener("click", () => scrollToThumb(thumb));
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      const nextIndex = Math.min(
+        galleryThumbs.length - 1,
+        Math.max(0, activeIndex + (event.key === "ArrowDown" ? 1 : -1)),
+      );
+      const nextThumb = galleryThumbs[nextIndex];
+      if (nextThumb) {
+        event.preventDefault();
+        scrollToThumb(nextThumb);
+      }
+    });
+
+    const renderGallery = () => {
+      const targetScroll = window.scrollY;
+      displayedScroll = reducedMotion.matches
+        ? targetScroll
+        : displayedScroll + (targetScroll - displayedScroll) * 0.1;
+      galleryRail.style.transform = isMobile()
+        ? `translate3d(${-displayedScroll}px, 0, 0)`
+        : `translate3d(0, ${-displayedScroll}px, 0)`;
+
+      const viewportCenter = isMobile() ? window.innerWidth / 2 : window.innerHeight / 2;
+      const influence = isMobile() ? 220 : 280;
+      const maxShift = isMobile() ? 22 : 48;
+      let closestIndex = 0;
+      let closestDistance = Number.POSITIVE_INFINITY;
+
+      galleryThumbs.forEach((thumb, index) => {
+        const rect = thumb.getBoundingClientRect();
+        const center = isMobile() ? rect.left + rect.width / 2 : rect.top + rect.height / 2;
+        const distance = Math.abs(center - viewportCenter);
+        const strength = Math.max(0, 1 - distance / influence);
+        const wantedShift = reducedMotion.matches ? 0 : strength * strength * maxShift;
+        const currentShift = dockPositions.get(thumb) ?? 0;
+        const shift = currentShift + (wantedShift - currentShift) * 0.12;
+        dockPositions.set(thumb, shift);
+        thumb.style.setProperty("--dock-shift", `${shift}px`);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = index;
+        }
+      });
+
+      setActive(closestIndex);
+      requestAnimationFrame(renderGallery);
+    };
+
+    sizeGallery();
+    const railResizeObserver = new ResizeObserver(sizeGallery);
+    railResizeObserver.observe(galleryRail);
+    window.addEventListener("resize", sizeGallery);
+    requestAnimationFrame(renderGallery);
+  }
 });
