@@ -37,6 +37,27 @@ html {
     -moz-osx-font-smoothing: grayscale;
 }
 
+html.lenis,
+html.lenis body {
+    height: auto;
+}
+
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+    overflow: clip;
+}
+
+.lenis [data-lenis-prevent],
+.lenis [data-lenis-prevent-wheel],
+.lenis [data-lenis-prevent-touch],
+.lenis [data-lenis-prevent-vertical],
+.lenis [data-lenis-prevent-horizontal] {
+    overscroll-behavior: contain;
+}
+
+.lenis.lenis-smooth iframe {
+    pointer-events: none;
+}
+
 body {
     background: var(--background);
     color: var(--ink);
@@ -307,8 +328,6 @@ a {
 
 .notes-list {
     list-style: none;
-    position: relative;
-    z-index: 1;
 }
 
 .notes-list a {
@@ -342,11 +361,11 @@ a {
     white-space: nowrap;
 }
 
-.notes-list a:hover .note-list-title {
+.notes-list a:is(:hover, :focus-visible) .note-list-title {
     opacity: 0.55;
 }
 
-.notes-feature-image,
+.note-list-image,
 .note-cover {
     aspect-ratio: 3 / 4;
     object-fit: cover;
@@ -354,13 +373,22 @@ a {
     z-index: 2;
 }
 
-.notes-feature-image {
+.note-list-image {
     height: 310px;
     left: 58%;
+    opacity: 0;
     pointer-events: none;
     top: -16px;
-    transform: rotate(7deg);
+    transform: rotate(3deg) scale(0.96);
+    transition:
+        opacity 160ms ease,
+        transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
     width: 235px;
+}
+
+.notes-list a:is(:hover, :focus-visible) .note-list-image {
+    opacity: 1;
+    transform: rotate(7deg) scale(1);
 }
 
 /* Note detail */
@@ -388,7 +416,7 @@ a {
 
 .note-cover {
     right: -150px;
-    top: -24px;
+    top: -170px;
     transform: rotate(6deg);
     width: 260px;
 }
@@ -576,12 +604,16 @@ pre code {
         padding-top: 230px;
     }
 
-    .notes-feature-image {
+    .note-list-image {
         height: 210px;
         left: 50%;
         top: 0;
-        transform: translateX(-50%) rotate(6deg);
+        transform: translateX(-50%) rotate(3deg) scale(0.96);
         width: 158px;
+    }
+
+    .notes-list a:is(:hover, :focus-visible) .note-list-image {
+        transform: translateX(-50%) rotate(6deg) scale(1);
     }
 
     .note-list-title {

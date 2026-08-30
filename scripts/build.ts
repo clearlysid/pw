@@ -129,7 +129,12 @@ export async function generateHTML() {
   }
 
   // Process notes
-  const notesMeta: { title: string; slug: string; date: string }[] = [];
+  const notesMeta: {
+    title: string;
+    slug: string;
+    date: string;
+    coverImage: string;
+  }[] = [];
 
   if (existsSync("notes")) {
     const notesGlob = new Glob("*.md");
@@ -138,20 +143,21 @@ export async function generateHTML() {
       const { data, content } = parseFrontmatter(raw);
       const slug = data.slug || basename(path, ".md");
 
-      if (data.published === "true") {
-        notesMeta.push({
-          title: data.title || slug,
-          slug,
-          date: data.date || "",
-        });
-      }
-
-      // Extract first image as cover image
+      // Use the first image as the detail cover and listing preview.
       const coverMatch = content.match(/^!\[.*?\]\((.*?)\)/m);
       const coverImage = coverMatch ? coverMatch[1] : "";
       const noteContent = coverMatch
         ? content.replace(coverMatch[0], "").trimStart()
         : content;
+
+      if (data.published === "true") {
+        notesMeta.push({
+          title: data.title || slug,
+          slug,
+          date: data.date || "",
+          coverImage,
+        });
+      }
 
       const rendered = Bun.markdown.html(noteContent, { autolinks: true });
       const displayDate = formatDate(data.date || "");
@@ -177,7 +183,10 @@ export async function generateHTML() {
 
     const listHTML = notesMeta
       .map((note) => {
-        return `<li><a href="/notes/${note.slug}/"><h2 class="note-list-title">${note.title}</h2><span class="note-list-rule" aria-hidden="true"></span><time class="note-list-date" datetime="${note.date}">${formatListDate(note.date)}</time></a></li>`;
+        const imageHTML = note.coverImage
+          ? `<img class="note-list-image" src="${note.coverImage}" alt="" loading="lazy" decoding="async" />`
+          : "";
+        return `<li><a href="/notes/${note.slug}/"><h2 class="note-list-title">${note.title}</h2><span class="note-list-rule" aria-hidden="true"></span><time class="note-list-date" datetime="${note.date}">${formatListDate(note.date)}</time>${imageHTML}</a></li>`;
       })
       .join("\n");
 

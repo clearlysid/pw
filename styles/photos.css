@@ -1,3 +1,11 @@
+.photos-body {
+    scrollbar-width: none;
+}
+
+.photos-body::-webkit-scrollbar {
+    display: none;
+}
+
 .photos-body .site-header {
     left: 0;
     position: fixed;
@@ -14,8 +22,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    left: 16px;
-    padding-block: calc(50vh - 54px);
+    left: 0;
     position: fixed;
     top: 0;
     width: 80px;
@@ -101,12 +108,10 @@
 
     .gallery-rail {
         align-items: end;
-        bottom: 16px;
+        bottom: 0;
         flex-direction: row;
         gap: 12px;
         left: 0;
-        padding-block: 0;
-        padding-inline: calc(50vw - 40px);
         top: auto;
         width: max-content;
     }

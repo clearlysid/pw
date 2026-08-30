@@ -4,7 +4,7 @@ import { generateHTML } from "./build";
 
 const DIST_ROOT = resolve("dist");
 const RELOAD_PATH = "/__dev_reload";
-const WATCH_ROOTS = ["pages", "styles", "js", "public"];
+const WATCH_ROOTS = ["pages", "notes", "styles", "js", "public"];
 const port = Number.parseInt(Bun.env.PORT ?? "4174", 10);
 
 if (!Number.isInteger(port) || port < 1 || port > 65_535) {
