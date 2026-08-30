@@ -5,6 +5,8 @@
 }
 
 :root {
+    --accent-font-size: 18px;
+    --accent-font-weight: 400;
     --background: #f7f3eb;
     --ink: #171712;
     --muted: #aaa69e;
@@ -61,7 +63,6 @@ a {
 .site-header {
     padding-top: 46px;
     position: relative;
-    view-transition-name: site-nav;
     z-index: 40;
 }
 
@@ -78,19 +79,30 @@ a {
     animation: page-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-::view-transition-group(site-nav) {
+::view-transition-group(nav-links),
+::view-transition-group(site-avatar) {
     animation: none;
     z-index: 40;
 }
 
-::view-transition-old(site-nav) {
+::view-transition-old(nav-links) {
     animation: none;
     opacity: 0;
 }
 
-::view-transition-new(site-nav) {
+::view-transition-new(nav-links) {
     animation: none;
     opacity: 1;
+}
+
+::view-transition-old(site-avatar) {
+    animation: none;
+    opacity: 1;
+}
+
+::view-transition-new(site-avatar) {
+    animation: none;
+    opacity: 0;
 }
 
 @keyframes page-leave {
@@ -120,22 +132,37 @@ a {
 .site-nav {
     align-items: center;
     display: flex;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 16px;
-    font-weight: 600;
     gap: 14px;
-    letter-spacing: -0.02em;
     white-space: nowrap;
 }
 
-.site-nav > a:not(.site-avatar),
-.site-nav > span {
+.site-nav-links {
+    align-items: center;
+    display: flex;
+    gap: 14px;
+    view-transition-name: nav-links;
+}
+
+.site-nav,
+.greatest-hits h2,
+.contact-links a,
+.note-list-date,
+.notes-empty,
+.note-date {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: var(--accent-font-size);
+    font-weight: var(--accent-font-weight);
+    letter-spacing: -0.02em;
+}
+
+.site-nav-links > a,
+.site-nav-links > span {
     color: var(--muted);
     transition: color 160ms ease;
 }
 
-.site-nav > a:not(.site-avatar):hover,
-.site-nav > a.is-active {
+.site-nav-links > a:hover,
+.site-nav-links > a.is-active {
     color: var(--ink);
 }
 
@@ -145,6 +172,7 @@ a {
     height: 46px;
     margin-right: 2px;
     overflow: hidden;
+    view-transition-name: site-avatar;
     width: 46px;
 }
 
@@ -166,7 +194,7 @@ a {
 .home-story p {
     font-size: 34px;
     font-weight: 400;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
     line-height: 1.3;
 }
 
@@ -185,10 +213,6 @@ a {
 
 .greatest-hits h2 {
     color: var(--muted);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: -0.02em;
 }
 
 .greatest-hits-track {
@@ -255,9 +279,6 @@ a {
 
 .contact-links a {
     color: #807c75;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 12px;
-    font-weight: 600;
 }
 
 .contact-links a:hover {
@@ -273,7 +294,7 @@ a {
 .notes-page > h1 {
     font-size: 34px;
     font-weight: 400;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
     line-height: 1.3;
 }
 
@@ -312,8 +333,6 @@ a {
 
 .note-list-date {
     color: #8e8a83;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 13px;
     white-space: nowrap;
 }
 
@@ -336,8 +355,6 @@ a {
 
 .notes-empty {
     color: #8e8a83;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 13px;
     padding-top: 8px;
 }
 
@@ -363,8 +380,6 @@ a {
 
 .note-date {
     color: #8e8a83;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 13px;
     margin-top: 14px;
 }
 
@@ -496,8 +511,8 @@ pre code {
         padding-top: 24px;
     }
 
-    .site-nav {
-        font-size: 13px;
+    .site-nav,
+    .site-nav-links {
         gap: 9px;
     }
 
@@ -566,10 +581,6 @@ pre code {
         font-size: 18px;
     }
 
-    .note-list-date {
-        font-size: 11px;
-    }
-
     .note {
         margin-top: 64px;
     }
@@ -592,8 +603,8 @@ pre code {
 }
 
 @media (max-width: 430px) {
-    .site-nav {
-        font-size: 12px;
+    .site-nav,
+    .site-nav-links {
         gap: 7px;
     }
 
@@ -631,9 +642,12 @@ pre code {
 
     ::view-transition-old(root),
     ::view-transition-new(root),
-    ::view-transition-group(site-nav),
-    ::view-transition-old(site-nav),
-    ::view-transition-new(site-nav) {
+    ::view-transition-group(nav-links),
+    ::view-transition-old(nav-links),
+    ::view-transition-new(nav-links),
+    ::view-transition-group(site-avatar),
+    ::view-transition-old(site-avatar),
+    ::view-transition-new(site-avatar) {
         animation: none;
     }
 }

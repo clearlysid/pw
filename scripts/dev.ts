@@ -68,13 +68,21 @@ const server = Bun.serve({
     const file = Bun.file(filePath);
     if (!(await file.exists())) return new Response("Not found", { status: 404 });
 
-    const headers = new Headers({
-      "Cache-Control": "no-store",
-      "Content-Type": file.type,
-    });
+    const isHTML = extname(filePath) === ".html";
+    const headers = new Headers({ "Content-Type": file.type });
+    if (isHTML) {
+      headers.set("Cache-Control", "no-store");
+    } else {
+      const etag = `"${file.size}-${file.lastModified}"`;
+      headers.set("Cache-Control", "no-cache");
+      headers.set("ETag", etag);
+      if (request.headers.get("If-None-Match") === etag) {
+        return new Response(null, { headers, status: 304 });
+      }
+    }
     if (request.method === "HEAD") return new Response(null, { headers });
 
-    if (extname(filePath) === ".html") {
+    if (isHTML) {
       const html = (await file.text()).replace("</body>", `${reloadClient}</body>`);
       return new Response(html, { headers });
     }
