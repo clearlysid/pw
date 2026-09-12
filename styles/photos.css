@@ -92,10 +92,10 @@
 
 .gallery-focus-item::after {
     content: attr(data-caption);
-    font-family: "Lora", Georgia, serif;
+    font-family: var(--font-sans);
     font-size: 16px;
     font-style: italic;
-    letter-spacing: -0.02em;
+    letter-spacing: normal;
     line-height: 1;
 }
 

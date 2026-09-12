@@ -20,6 +20,7 @@ declare const Lenis: new (options?: LenisOptions) => LenisInstance;
 
 function startSmoothScroll() {
   if (typeof Lenis === "undefined") return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const lenis = new Lenis();
   const frame = (time: number) => {
     lenis.raf(time);
@@ -28,7 +29,78 @@ function startSmoothScroll() {
   requestAnimationFrame(frame);
 }
 
+function startWorkMedia() {
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  document.querySelectorAll<HTMLVideoElement>("[data-work-video]").forEach((video) => {
+    const button = video.closest("figure")?.querySelector<HTMLButtonElement>("[data-work-toggle]");
+    if (!button) return;
+
+    let visible = false;
+    let manuallyPaused = false;
+    video.controls = false;
+    button.hidden = false;
+
+    const updateLabel = () => {
+      const action = video.paused ? "Play" : "Pause";
+      button.textContent = `${action} video`;
+      button.setAttribute("aria-label", `${action}: ${video.getAttribute("aria-label")}`);
+    };
+    const play = () => {
+      video.play().catch(updateLabel);
+    };
+    const syncPlayback = () => {
+      if (visible && !manuallyPaused && !reducedMotion.matches && !document.hidden) {
+        play();
+      } else {
+        video.pause();
+      }
+    };
+
+    button.addEventListener("click", () => {
+      if (video.paused) {
+        manuallyPaused = false;
+        play();
+      } else {
+        manuallyPaused = true;
+        video.pause();
+      }
+    });
+    video.addEventListener("play", updateLabel);
+    video.addEventListener("pause", updateLabel);
+    reducedMotion.addEventListener("change", syncPlayback);
+    document.addEventListener("visibilitychange", syncPlayback);
+    new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting && entry.intersectionRatio >= 0.25;
+      syncPlayback();
+    }, { threshold: 0.25 }).observe(video);
+    updateLabel();
+  });
+}
+
 const RAIL_COPIES = 2;
+const PHOTO_QUERY_PARAM = "photo";
+
+function photoIndexFromUrl() {
+  const photoId = new URL(window.location.href).searchParams.get(
+    PHOTO_QUERY_PARAM,
+  );
+  if (photoId === null) return null;
+
+  const photoIndex = galleryPhotos.findIndex((photo) => photo.id === photoId);
+  return photoIndex >= 0 ? photoIndex : null;
+}
+
+function syncPhotoUrl(index: number) {
+  const photo = galleryPhotos[index];
+  if (!photo) return;
+
+  const url = new URL(window.location.href);
+  if (url.searchParams.get(PHOTO_QUERY_PARAM) === photo.id) return;
+
+  url.searchParams.set(PHOTO_QUERY_PARAM, photo.id);
+  window.history.replaceState(window.history.state, "", url);
+}
 
 function createGalleryItems(
   rail: HTMLElement,
@@ -84,7 +156,8 @@ function startGallery() {
   if (!gallery || !rail || !focusList) return;
   if (typeof Lenis === "undefined") return;
 
-  const startIndex = Math.floor(Math.random() * galleryPhotos.length);
+  const startIndex =
+    photoIndexFromUrl() ?? Math.floor(Math.random() * galleryPhotos.length);
   createGalleryItems(rail, focusList, startIndex);
 
   const thumbnails = Array.from(
@@ -137,6 +210,7 @@ function startGallery() {
     focusItems.forEach((item, itemIndex) => {
       item.classList.toggle("is-active", itemIndex === index);
     });
+    syncPhotoUrl(index);
   };
 
   const sizeGallery = () => {
@@ -245,5 +319,6 @@ function startGallery() {
 
 document.addEventListener("DOMContentLoaded", () => {
   if (!document.querySelector("[data-photo-gallery]")) startSmoothScroll();
+  startWorkMedia();
   startGallery();
 });
