@@ -39,6 +39,7 @@ function resolveRequestPath(pathname: string) {
 }
 
 await generateHTML();
+let buildInProgress: Promise<void> | undefined;
 
 const server = Bun.serve({
   hostname: "0.0.0.0",
@@ -55,6 +56,10 @@ const server = Bun.serve({
         headers: { Allow: "GET, HEAD" },
         status: 405,
       });
+    }
+
+    while (buildInProgress) {
+      await buildInProgress;
     }
 
     let filePath: string | null;
@@ -110,12 +115,14 @@ async function rebuild() {
   }
 
   rebuilding = true;
+  buildInProgress = generateHTML();
   try {
-    await generateHTML();
+    await buildInProgress;
     server.publish("reload", "reload");
   } catch (error) {
     console.error("Build failed", error);
   } finally {
+    buildInProgress = undefined;
     rebuilding = false;
     if (pending) {
       pending = false;

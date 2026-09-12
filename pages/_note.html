@@ -6,38 +6,34 @@
         <title>{{ title }}</title>
         <meta name="description" content="{{ description }}" />
         <link rel="icon" type="image/png" href="/favicon.png" />
-        <link rel="preload" as="image" href="/img/hero.png" fetchpriority="high" />
         <link rel="preload" href="/fonts/source-serif-4-roman.woff2" as="font" type="font/woff2" crossorigin />
-        <link rel="stylesheet" href="/styles/main.css?v=37" />
+        <link rel="stylesheet" href="/styles/main.css?v=44" />
     </head>
     <body>
         <header class="site-header site-column">
             <nav class="site-nav" aria-label="Primary navigation">
-                <a class="site-avatar" href="/" aria-label="Home">
-                    <img src="/img/hero.png" alt="" width="903" height="1205" decoding="sync" fetchpriority="high" />
-                </a>
                 <div class="site-nav-links">
+                    <span class="site-nav-highlight" aria-hidden="true"></span>
                     <a href="/">SID</a>
-                    <span aria-hidden="true">/</span>
                     <a class="is-active" href="/notes/" aria-current="page">NOTES</a>
-                    <span aria-hidden="true">/</span>
                     <a href="/photos/">PHOTOS</a>
                 </div>
             </nav>
         </header>
-
-        <article class="note site-column">
-            <div class="note-hero">
-                <header>
-                    <h1 class="note-title">{{ title }}</h1>
-                    <p class="note-date">{{ date }}</p>
-                </header>
-                {{{ coverImageHTML }}}
-            </div>
-            <div class="note-content">{{{ content }}}</div>
-        </article>
+        <div id="swup" class="transition-page">
+            <article class="note site-column">
+                <div class="note-hero">
+                    <header>
+                        <h1 class="note-title"><span class="note-title-text">{{ title }}</span></h1>
+                        <p class="note-date">{{ date }}</p>
+                    </header>
+                    {{{ coverImageHTML }}}
+                </div>
+                <div class="note-content">{{{ content }}}</div>
+            </article>
+        </div>
 
         <script src="https://unpkg.com/lenis@1.3.26/dist/lenis.min.js"></script>
-        <script type="module" src="/js/main.js?v=4"></script>
+        <script type="module" src="/js/main.js?v=8"></script>
     </body>
 </html>

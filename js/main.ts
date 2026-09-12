@@ -1,9 +1,12 @@
 import { galleryPhotos } from "./gallery-data";
+import { replacePhotoUrl, startTransitions } from "./transitions";
 
 type LenisInstance = {
   readonly scroll: number;
+  readonly options: Required<Pick<LenisOptions, "lerp">>;
   raf: (time: number) => void;
   resize: () => void;
+  destroy: () => void;
   scrollTo: (
     target: number,
     options?: { immediate?: boolean },
@@ -14,6 +17,7 @@ type LenisOptions = {
   autoRaf?: boolean;
   infinite?: boolean;
   syncTouch?: boolean;
+  lerp?: number;
 };
 
 declare const Lenis: new (options?: LenisOptions) => LenisInstance;
@@ -22,17 +26,22 @@ function startSmoothScroll() {
   if (typeof Lenis === "undefined") return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const lenis = new Lenis();
+  let frameId = 0;
   const frame = (time: number) => {
     lenis.raf(time);
-    requestAnimationFrame(frame);
+    frameId = requestAnimationFrame(frame);
   };
-  requestAnimationFrame(frame);
+  frameId = requestAnimationFrame(frame);
+  return () => {
+    cancelAnimationFrame(frameId);
+    lenis.destroy();
+  };
 }
 
-function startWorkMedia() {
+function startWorkMedia(root: HTMLElement, signal: AbortSignal) {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-  document.querySelectorAll<HTMLVideoElement>("[data-work-video]").forEach((video) => {
+  root.querySelectorAll<HTMLVideoElement>("[data-work-video]").forEach((video) => {
     const button = video.closest("figure")?.querySelector<HTMLButtonElement>("[data-work-toggle]");
     if (!button) return;
 
@@ -65,15 +74,20 @@ function startWorkMedia() {
         manuallyPaused = true;
         video.pause();
       }
-    });
-    video.addEventListener("play", updateLabel);
-    video.addEventListener("pause", updateLabel);
-    reducedMotion.addEventListener("change", syncPlayback);
-    document.addEventListener("visibilitychange", syncPlayback);
-    new IntersectionObserver(([entry]) => {
+    }, { signal });
+    video.addEventListener("play", updateLabel, { signal });
+    video.addEventListener("pause", updateLabel, { signal });
+    reducedMotion.addEventListener("change", syncPlayback, { signal });
+    document.addEventListener("visibilitychange", syncPlayback, { signal });
+    const observer = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting && entry.intersectionRatio >= 0.25;
       syncPlayback();
-    }, { threshold: 0.25 }).observe(video);
+    }, { threshold: 0.25 });
+    observer.observe(video);
+    signal.addEventListener("abort", () => {
+      observer.disconnect();
+      video.pause();
+    }, { once: true });
     updateLabel();
   });
 }
@@ -99,7 +113,7 @@ function syncPhotoUrl(index: number) {
   if (url.searchParams.get(PHOTO_QUERY_PARAM) === photo.id) return;
 
   url.searchParams.set(PHOTO_QUERY_PARAM, photo.id);
-  window.history.replaceState(window.history.state, "", url);
+  replacePhotoUrl(url);
 }
 
 function createGalleryItems(
@@ -112,6 +126,7 @@ function createGalleryItems(
     focusItem.className = "gallery-focus-item";
     focusItem.dataset.caption = photo.caption;
     focusItem.dataset.galleryFocus = String(index);
+    focusItem.setAttribute("aria-hidden", "true");
 
     const focusImage = document.createElement("img");
     focusImage.alt = photo.alt;
@@ -147,12 +162,13 @@ function createGalleryItems(
   }
 }
 
-function startGallery() {
-  const gallery = document.querySelector<HTMLElement>("[data-photo-gallery]");
-  const rail = document.querySelector<HTMLElement>("[data-gallery-rail]");
-  const focusList = document.querySelector<HTMLElement>(
+function startGallery(root: HTMLElement, signal: AbortSignal) {
+  const gallery = root.querySelector<HTMLElement>("[data-photo-gallery]");
+  const rail = root.querySelector<HTMLElement>("[data-gallery-rail]");
+  const focusList = root.querySelector<HTMLElement>(
     "[data-gallery-focus-list]",
   );
+  const status = root.querySelector<HTMLElement>("[data-gallery-status]");
   if (!gallery || !rail || !focusList) return;
   if (typeof Lenis === "undefined") return;
 
@@ -161,32 +177,36 @@ function startGallery() {
   createGalleryItems(rail, focusList, startIndex);
 
   const thumbnails = Array.from(
-    document.querySelectorAll<HTMLButtonElement>("[data-gallery-thumb]"),
+    root.querySelectorAll<HTMLButtonElement>("[data-gallery-thumb]"),
   );
   const focusItems = Array.from(
-    document.querySelectorAll<HTMLElement>("[data-gallery-focus]"),
+    root.querySelectorAll<HTMLElement>("[data-gallery-focus]"),
   );
   if (thumbnails.length === 0) return;
 
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const lenis = new Lenis({
     autoRaf: true,
     infinite: true,
     syncTouch: false,
+    lerp: reducedMotion.matches ? 1 : 0.1,
   });
+  reducedMotion.addEventListener("change", () => {
+    lenis.options.lerp = reducedMotion.matches ? 1 : 0.1;
+    if (reducedMotion.matches) lenis.scrollTo(lenis.scroll, { immediate: true });
+  }, { signal });
   const dockPositions = new Map<HTMLButtonElement, number>();
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   let activeIndex = -1;
+  let displayedIndex = -1;
+  const decodedImages = new Map<number, Promise<void>>();
   let cycleDistance = 0;
-  let hasSized = false;
 
   const isMobile = () => window.innerWidth <= 768;
 
-  const thumbnailCenter = (thumbnail: HTMLButtonElement) => {
-    const rect = thumbnail.getBoundingClientRect();
-    return isMobile()
-      ? rect.left + rect.width / 2
-      : rect.top + rect.height / 2;
-  };
+  const thumbnailCenter = (thumbnail: HTMLButtonElement) =>
+    (isMobile()
+      ? thumbnail.offsetLeft + thumbnail.offsetWidth / 2
+      : thumbnail.offsetTop + thumbnail.offsetHeight / 2) - lenis.scroll;
 
   const scrollTarget = (thumbnail: HTMLButtonElement) =>
     isMobile()
@@ -207,17 +227,36 @@ function startGallery() {
         thumbnail.dataset.galleryThumb === String(index),
       );
     });
-    focusItems.forEach((item, itemIndex) => {
-      item.classList.toggle("is-active", itemIndex === index);
-    });
     syncPhotoUrl(index);
+    const image = focusItems[index]?.querySelector("img");
+    if (!image) return;
+    image.loading = "eager";
+    if (status) {
+      status.hidden = displayedIndex >= 0;
+      status.textContent = "Loading photograph…";
+    }
+    let decoded = decodedImages.get(index);
+    if (!decoded) {
+      decoded = image.decode();
+      decodedImages.set(index, decoded);
+    }
+    void decoded.then(() => {
+      if (signal.aborted || activeIndex !== index) return;
+      focusItems.forEach((item, itemIndex) => {
+        item.classList.toggle("is-active", itemIndex === index);
+        item.setAttribute("aria-hidden", String(itemIndex !== index));
+      });
+      displayedIndex = index;
+      if (status) status.hidden = true;
+    }, () => {
+      decodedImages.delete(index);
+      if (signal.aborted || activeIndex !== index || !status) return;
+      status.textContent = "Couldn’t load this photo. Choose another thumbnail.";
+      status.hidden = false;
+    });
   };
 
   const sizeGallery = () => {
-    const previousCycleDistance = cycleDistance;
-    const previousProgress = hasSized
-      ? lenis.scroll / previousCycleDistance
-      : null;
     const firstThumbnail = thumbnails[0];
     const repeatedThumbnail = thumbnails[galleryPhotos.length];
     if (!firstThumbnail || !repeatedThumbnail) return;
@@ -230,14 +269,9 @@ function startGallery() {
     gallery.style.height = `${window.innerHeight + cycleDistance}px`;
     lenis.resize();
 
-    const startThumbnail = thumbnails[startIndex];
-    if (!startThumbnail) return;
-    const nextScroll =
-      previousProgress === null
-        ? wrapToCycle(scrollTarget(startThumbnail))
-        : previousProgress * cycleDistance;
-    lenis.scrollTo(nextScroll, { immediate: true });
-    hasSized = true;
+    const selectedThumbnail = thumbnails[activeIndex >= 0 ? activeIndex : startIndex];
+    if (!selectedThumbnail) return;
+    lenis.scrollTo(wrapToCycle(scrollTarget(selectedThumbnail)), { immediate: true });
   };
 
   const scrollToThumbnail = (thumbnail: HTMLButtonElement) => {
@@ -249,13 +283,18 @@ function startGallery() {
   };
 
   thumbnails.forEach((thumbnail) => {
-    thumbnail.addEventListener("click", () => scrollToThumbnail(thumbnail));
+    thumbnail.addEventListener("click", () => scrollToThumbnail(thumbnail), { signal });
   });
 
   window.addEventListener("keydown", (event) => {
-    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
+        (event.target instanceof HTMLElement &&
+          (event.target.isContentEditable || event.target.matches("input, textarea, select")))) return;
+    const nextKey = isMobile() ? "ArrowRight" : "ArrowDown";
+    const previousKey = isMobile() ? "ArrowLeft" : "ArrowUp";
+    if (event.key !== nextKey && event.key !== previousKey) return;
     const currentIndex = activeIndex >= 0 ? activeIndex : startIndex;
-    const direction = event.key === "ArrowDown" ? 1 : -1;
+    const direction = event.key === nextKey ? 1 : -1;
     const nextIndex =
       (currentIndex + direction + focusItems.length) % focusItems.length;
     const viewportCenter = isMobile()
@@ -273,8 +312,9 @@ function startGallery() {
     if (!nextThumbnail) return;
     event.preventDefault();
     scrollToThumbnail(nextThumbnail);
-  });
+  }, { signal });
 
+  let frameId = 0;
   const render = () => {
     const currentScroll = lenis.scroll;
     rail.style.transform = isMobile()
@@ -297,7 +337,7 @@ function startGallery() {
         ? 0
         : strength * strength * maxShift;
       const currentShift = dockPositions.get(thumbnail) ?? 0;
-      const shift = currentShift + (wantedShift - currentShift) * 0.12;
+      const shift = reducedMotion.matches ? 0 : currentShift + (wantedShift - currentShift) * 0.12;
       dockPositions.set(thumbnail, shift);
       thumbnail.style.setProperty("--dock-shift", `${shift}px`);
       if (distance < closestDistance) {
@@ -307,18 +347,32 @@ function startGallery() {
     });
 
     setActive(closestIndex);
-    requestAnimationFrame(render);
+    frameId = requestAnimationFrame(render);
   };
 
   sizeGallery();
   const railResizeObserver = new ResizeObserver(sizeGallery);
   railResizeObserver.observe(rail);
-  window.addEventListener("resize", sizeGallery);
-  requestAnimationFrame(render);
+  window.addEventListener("resize", sizeGallery, { signal });
+  frameId = requestAnimationFrame(render);
+  signal.addEventListener("abort", () => {
+    cancelAnimationFrame(frameId);
+    railResizeObserver.disconnect();
+    lenis.destroy();
+  }, { once: true });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  if (!document.querySelector("[data-photo-gallery]")) startSmoothScroll();
-  startWorkMedia();
-  startGallery();
-});
+function initializePage() {
+  const root = document.querySelector<HTMLElement>("#swup");
+  if (!root) throw new Error("Missing page container");
+  const controller = new AbortController();
+  const stopScroll = root.querySelector("[data-photo-gallery]") ? undefined : startSmoothScroll();
+  startWorkMedia(root, controller.signal);
+  startGallery(root, controller.signal);
+  return () => {
+    controller.abort();
+    stopScroll?.();
+  };
+}
+
+startTransitions(initializePage);

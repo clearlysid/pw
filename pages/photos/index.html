@@ -5,7 +5,10 @@ description: Photographs by Siddharth.
 ---
 
 <main class="gallery-shell" data-photo-gallery>
-    <div class="gallery-rail" data-gallery-rail aria-label="Photo thumbnails"></div>
+    <div class="gallery-rail-viewport transition-gallery-rail">
+        <div class="gallery-rail" data-gallery-rail aria-label="Photo thumbnails"></div>
+    </div>
     <section class="gallery-focus" data-gallery-focus-list aria-live="polite"></section>
+    <p class="gallery-status" data-gallery-status role="status" hidden></p>
     <noscript>This gallery needs JavaScript to display its photos.</noscript>
 </main>

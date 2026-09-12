@@ -178,34 +178,34 @@ export async function generateHTML() {
       await Bun.write(fullPath, html);
     }
 
-    // Generate all notes page
-    notesMeta.sort((a, b) => (b.date > a.date ? 1 : -1));
-
-    const listHTML = notesMeta
-      .map((note) => {
-        const imageHTML = note.coverImage
-          ? `<img class="note-list-image" src="${note.coverImage}" alt="" loading="lazy" decoding="async" />`
-          : "";
-        return `<li><a href="/notes/${note.slug}/"><h2 class="note-list-title">${note.title}</h2><span class="note-list-rule" aria-hidden="true"></span><time class="note-list-date" datetime="${note.date}">${formatListDate(note.date)}</time>${imageHTML}</a></li>`;
-      })
-      .join("\n");
-
-    if (templates["notes"]) {
-      const listingHTML = render(templates["notes"], {
-        content: listHTML,
-        ...baseData,
-      });
-      const listingPath = join(DIST, "notes/index.html");
-      await mkdir(dirname(listingPath), { recursive: true });
-      await Bun.write(listingPath, listingHTML);
-    }
-
     // Copy attachments to dist
     if (existsSync("notes/attachments")) {
       await cp("notes/attachments", join(DIST, "notes/attachments"), {
         recursive: true,
       });
     }
+  }
+
+  // Generate all notes page
+  notesMeta.sort((a, b) => (b.date > a.date ? 1 : -1));
+
+  const listHTML = notesMeta
+    .map((note) => {
+      const imageHTML = note.coverImage
+        ? `<img class="note-list-image" src="${note.coverImage}" alt="" loading="lazy" decoding="async" />`
+        : "";
+      return `<li><a href="/notes/${note.slug}/"><h2 class="note-list-title">${note.title}</h2><span class="note-list-rule" aria-hidden="true"></span><time class="note-list-date" datetime="${note.date}">${formatListDate(note.date)}</time>${imageHTML}</a></li>`;
+    })
+    .join("\n");
+
+  if (templates["notes"]) {
+    const listingHTML = render(templates["notes"], {
+      content: listHTML || '<li class="notes-empty">No notes yet.</li>',
+      ...baseData,
+    });
+    const listingPath = join(DIST, "notes/index.html");
+    await mkdir(dirname(listingPath), { recursive: true });
+    await Bun.write(listingPath, listingHTML);
   }
 
   // Copy public assets
@@ -224,6 +224,7 @@ export async function generateHTML() {
     const jsResult = await Bun.build({
       entrypoints: ["js/main.ts"],
       outdir: join(DIST, "js"),
+      format: "iife",
       minify: true,
     });
     if (!jsResult.success) {
