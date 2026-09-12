@@ -20,23 +20,64 @@ description: Bengaluru-based software designer, engineer and startup operator.
         <div class="work-heading site-column">
             <h2 class="section-label" id="work-title">[WORK]</h2>
         </div>
-        <div class="work-gallery">
-            <figure class="work-piece work-piece-lead">
-                <video data-work-video controls muted loop playsinline preload="metadata"
-                    width="1906" height="1080" poster="/img/helmer-poster.webp"
-                    aria-label="Helmer product demonstration" src="/img/helmer.mp4"></video>
-                <button class="work-toggle" data-work-toggle type="button" hidden>Play video</button>
-            </figure>
-            <figure class="work-detail">
-                <img src="/img/helmer-detail-poster.webp" width="500" height="522"
-                    alt="A detail from Helmer’s visual identity" decoding="async" />
-            </figure>
-            <figure class="work-piece work-piece-secondary">
-                <video data-work-video controls muted loop playsinline preload="metadata"
-                    width="1920" height="1080" poster="/img/headout-poster.webp"
-                    aria-label="Headout brand and product demonstration" src="/img/headout.mp4"></video>
-                <button class="work-toggle" data-work-toggle type="button" hidden>Play video</button>
-            </figure>
+        <div class="work-gallery" data-work-gallery tabindex="0" role="region"
+            aria-label="Selected work" data-lenis-prevent-horizontal>
+            <div class="work-track">
+                <article class="work-project work-project-helmer" aria-labelledby="helmer-title">
+                    <figure class="work-piece" data-work-depth="0.035">
+                        <video data-work-video muted loop playsinline preload="metadata"
+                            width="1906" height="1080" poster="/img/helmer-poster.webp"
+                            aria-label="Helmer product demonstration" src="/img/helmer.mp4"></video>
+                    </figure>
+                    <div class="work-caption"><h3 id="helmer-title">Helmer</h3><span>AI &amp; creative tools</span><span class="work-index">01</span></div>
+                    <figure class="work-scrap work-detail" data-work-depth="0.11">
+                        <img src="/img/helmer-detail-poster.webp" width="500" height="522"
+                            alt="A detail from Helmer's visual identity" decoding="async" />
+                    </figure>
+                    <span class="work-sticker" data-work-depth="-0.07">Made for<br><i>making.</i></span>
+                </article>
+                <article class="work-project work-project-headout" aria-labelledby="headout-title">
+                    <figure class="work-piece" data-work-depth="0.05">
+                        <video data-work-video muted loop playsinline preload="metadata"
+                            width="1920" height="1080" poster="/img/headout-poster.webp"
+                            aria-label="Headout brand and product demonstration" src="/img/headout.mp4"></video>
+                    </figure>
+                    <div class="work-caption"><h3 id="headout-title">Headout</h3><span>Brand &amp; design engineering</span><span class="work-index">02</span></div>
+                    <figure class="work-scrap work-team" data-work-depth="0.13">
+                        <img src="/img/headout.jpg" width="3391" height="2543"
+                            alt="With the Headout team" loading="lazy" decoding="async" />
+                    </figure>
+                    <span class="work-ticket" data-work-depth="-0.06">HEADOUT<span>Go. See. Do.</span></span>
+                </article>
+                <article class="work-project work-project-code" aria-labelledby="code-title">
+                    <a class="work-code-card" href="https://github.com/clearlysid/pw" target="_blank" rel="noopener" data-work-depth="0.08">
+                        <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true" fill="currentColor"><path d="M12 .75a11.25 11.25 0 0 0-3.558 21.924c.563.104.768-.244.768-.542 0-.267-.01-.975-.015-1.914-3.13.68-3.791-1.51-3.791-1.51-.512-1.3-1.25-1.646-1.25-1.646-1.023-.7.077-.686.077-.686 1.13.08 1.724 1.16 1.724 1.16 1.006 1.724 2.64 1.226 3.282.938.102-.728.394-1.226.715-1.508-2.499-.284-5.126-1.25-5.126-5.565 0-1.23.44-2.234 1.16-3.022-.117-.285-.503-1.43.11-2.98 0 0 .945-.302 3.094 1.154A10.8 10.8 0 0 1 12 6.174c.956.004 1.919.129 2.82.379 2.148-1.456 3.091-1.154 3.091-1.154.615 1.55.229 2.695.112 2.98.722.788 1.158 1.792 1.158 3.022 0 4.327-2.631 5.278-5.138 5.557.404.35.765 1.043.765 2.1 0 1.517-.014 2.742-.014 3.114 0 .3.202.65.774.54A11.25 11.25 0 0 0 12 .75Z"/></svg>
+                        <span class="work-code-owner">clearlysid /</span><strong>pw <span aria-hidden="true">↗</span></strong>
+                        <span class="work-code-description">This website, in code.</span>
+                        <span class="work-code-footer"><span class="work-language"></span>TypeScript<span>View repository</span></span>
+                    </a>
+                    <div class="work-caption"><h3 id="code-title">On GitHub</h3><span>Source code</span><span class="work-index">03</span></div>
+                    <span class="work-note" data-work-depth="-0.09">Always a<br><i>work in progress.</i></span>
+                </article>
+                <article class="work-project work-project-type" aria-label="Typography study, placeholder">
+                    <div class="work-type-study" data-work-depth="0.04"><span>TYPE STUDY / 01</span><strong>Ideas<br>take <i>shape.</i></strong><span>ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz</span></div>
+                    <div class="work-caption"><h3>Type study</h3><span>Placeholder</span><span class="work-index">04</span></div>
+                </article>
+                <article class="work-project work-project-headout" aria-label="Motion study, placeholder">
+                    <figure class="work-piece" data-work-depth="0.06"><video data-work-video muted loop playsinline preload="metadata" width="1906" height="1080" poster="/img/helmer-poster.webp" aria-label="Placeholder motion study using the Helmer demo" src="/img/helmer.mp4"></video></figure>
+                    <div class="work-caption"><h3>Motion study</h3><span>Placeholder</span><span class="work-index">05</span></div>
+                    <span class="work-ticket" data-work-depth="-0.08">EXPERIMENT<span>Frame by frame</span></span>
+                </article>
+                <article class="work-project work-project-code" aria-label="Pull request card, placeholder">
+                    <div class="work-code-card" data-work-depth="0.09"><span class="work-code-owner">sample / interface</span><strong>↳ #128</strong><span class="work-code-description">Refine the little details</span><span class="work-code-footer">Pull request<span>Placeholder</span></span></div>
+                    <div class="work-caption"><h3>In the details</h3><span>Placeholder</span><span class="work-index">06</span></div>
+                </article>
+                <article class="work-project" aria-label="Visual study, placeholder">
+                    <figure class="work-piece work-image-study" data-work-depth="0.05"><img src="/img/helmer-detail-poster.webp" width="500" height="522" alt="Placeholder visual study using Helmer artwork" loading="lazy" decoding="async" /></figure>
+                    <div class="work-caption"><h3>Visual study</h3><span>Placeholder</span><span class="work-index">07</span></div>
+                    <span class="work-sticker" data-work-depth="-0.06">Just<br><i>exploring.</i></span>
+                </article>
+            </div>
         </div>
     </section>
 
