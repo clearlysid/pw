@@ -114,10 +114,10 @@ test("article navigation updates metadata and preserves the navbar", async ({ pa
   await expect(page.locator("body")).toHaveClass("photos-body");
 });
 
-test("touch, keyboard, modified clicks, and native fallback", async ({ browser }) => {
+test("touch, keyboard, modified clicks, and native fallback", async ({ browser, baseURL }) => {
   const context = await browser.newContext({ hasTouch: true, viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
-  await page.goto("http://127.0.0.1:4174/");
+  await page.goto(`${baseURL}/`);
   await page.getByRole("link", { name: "NOTES", exact: true }).tap();
   await settled(page, "/notes/");
   await page.getByRole("link", { name: "PHOTOS", exact: true }).focus();
@@ -133,9 +133,30 @@ test("touch, keyboard, modified clicks, and native fallback", async ({ browser }
   await context.close();
   const nativeContext = await browser.newContext({ javaScriptEnabled: false });
   const nativePage = await nativeContext.newPage();
-  await nativePage.goto("http://127.0.0.1:4174/");
+  await nativePage.goto(`${baseURL}/`);
   await nativePage.getByRole("link", { name: "NOTES", exact: true }).click();
   await expect(nativePage).toHaveURL(/\/notes\/$/);
   await expect(nativePage.locator(".notes-page")).toBeVisible();
   await nativeContext.close();
+});
+
+test("work carousel initializes and cleans up across page visits", async ({ page }) => {
+  await page.goto("/");
+  const gallery = page.locator("[data-work-gallery]");
+  await expect.poll(() => gallery.evaluate(el => el.scrollLeft)).toBeGreaterThan(0);
+  const projects = await gallery.locator(".work-project").count();
+  for (let visit = 0; visit < 3; visit++) {
+    const oldGallery = await gallery.elementHandle();
+    await gallery.focus();
+    const before = await gallery.evaluate(el => el.scrollLeft);
+    await page.keyboard.press("ArrowRight");
+    await expect.poll(() => gallery.evaluate(el => el.scrollLeft)).not.toBe(before);
+    await navigate(page, "NOTES", "/notes/");
+    expect(await oldGallery?.evaluate(el =>
+      Array.from(el.querySelectorAll("video")).every(video => video.paused),
+    )).toBe(true);
+    await navigate(page, "SID", "/");
+    await expect(gallery.locator(".work-project")).toHaveCount(projects);
+    await expect.poll(() => gallery.evaluate(el => el.scrollLeft)).toBeGreaterThan(0);
+  }
 });

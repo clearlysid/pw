@@ -38,58 +38,155 @@ function startSmoothScroll() {
   };
 }
 
-function startWorkMedia(root: HTMLElement, signal: AbortSignal) {
+function startWorkGallery(root: HTMLElement, signal: AbortSignal) {
+  const gallery = root.querySelector<HTMLElement>("[data-work-gallery]");
+  if (!gallery) return;
+  const track = gallery.querySelector<HTMLElement>(".work-track");
+  if (!track) return;
+  const originals = Array.from(track.querySelectorAll<HTMLElement>(".work-project"));
+  const first = originals[0];
+  if (!first) return;
+  for (const side of ["before", "after"]) {
+    const copies = document.createDocumentFragment();
+    originals.forEach((project) => {
+      const copy = project.cloneNode(true);
+      if (!(copy instanceof HTMLElement)) return;
+      copy.setAttribute("aria-hidden", "true");
+      copy.removeAttribute("aria-labelledby");
+      copy.querySelectorAll("[id]").forEach((element) => element.removeAttribute("id"));
+      copy.querySelectorAll<HTMLElement>("a, button, [tabindex]").forEach((element) => element.tabIndex = -1);
+      copies.append(copy);
+    });
+    if (side === "before") track.prepend(copies);
+    else track.append(copies);
+  }
+  const firstCopy = track.querySelector<HTMLElement>(".work-project");
+  if (!firstCopy) return;
+  let cycle = 0;
+  let drag: { id: number; x: number; scroll: number; moved: boolean } | null = null;
+  const wrapScroll = () => {
+    if (!cycle) return;
+    const current = gallery.scrollLeft;
+    const wrapped = cycle + ((current - cycle) % cycle + cycle) % cycle;
+    const shift = wrapped - current;
+    if (Math.abs(shift) < 1) return;
+    gallery.scrollLeft = wrapped;
+    if (drag) drag.scroll += shift;
+  };
+  const sizeLoop = () => {
+    const progress = cycle ? (gallery.scrollLeft - cycle) / cycle : 0;
+    cycle = first.offsetLeft - firstCopy.offsetLeft;
+    gallery.scrollLeft = cycle * (1 + progress);
+    wrapScroll();
+  };
+  sizeLoop();
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const layers = Array.from(gallery.querySelectorAll<HTMLElement>("[data-work-depth]"));
+  let frame = 0;
 
-  root.querySelectorAll<HTMLVideoElement>("[data-work-video]").forEach((video) => {
-    const button = video.closest("figure")?.querySelector<HTMLButtonElement>("[data-work-toggle]");
-    if (!button) return;
+  const render = () => {
+    frame = 0;
+    const bounds = gallery.getBoundingClientRect();
+    const vertical = (window.innerHeight / 2 - bounds.top - bounds.height / 2) * 0.25;
+    const positions = layers.map((layer) => {
+      const project = layer.parentElement;
+      const center = (project?.offsetLeft ?? 0) + (project?.offsetWidth ?? 0) / 2;
+      const distance = gallery.scrollLeft + gallery.clientWidth / 2 - center;
+      const depth = Number(layer.dataset.workDepth);
+      return {
+        x: reducedMotion.matches ? 0 : Math.max(-28, Math.min(28, distance * depth)),
+        y: reducedMotion.matches ? 0 : Math.max(-16, Math.min(16, vertical * depth)),
+      };
+    });
+    layers.forEach((layer, index) => {
+      const position = positions[index];
+      if (!position) return;
+      layer.style.setProperty("--work-x", `${position.x}px`);
+      layer.style.setProperty("--work-y", `${position.y}px`);
+    });
+  };
+  const schedule = () => { if (!frame) frame = requestAnimationFrame(render); };
+  gallery.addEventListener("scroll", () => { wrapScroll(); schedule(); }, { passive: true });
+  window.addEventListener("scroll", schedule, { passive: true, signal });
+  window.addEventListener("resize", schedule, { signal });
+  reducedMotion.addEventListener("change", schedule, { signal });
+  const resizeObserver = new ResizeObserver(() => { sizeLoop(); schedule(); });
+  resizeObserver.observe(gallery);
 
+  let suppressClick = false;
+  gallery.addEventListener("pointerdown", (event) => {
+    if (event.pointerType !== "mouse" || event.button !== 0) return;
+    suppressClick = false;
+    drag = { id: event.pointerId, x: event.clientX, scroll: gallery.scrollLeft, moved: false };
+  });
+  gallery.addEventListener("pointermove", (event) => {
+    if (!drag || drag.id !== event.pointerId) return;
+    const delta = event.clientX - drag.x;
+    if (!drag.moved && Math.abs(delta) < 6) return;
+    drag.moved = true;
+    gallery.setPointerCapture(event.pointerId);
+    gallery.classList.add("is-dragging");
+    gallery.scrollLeft = drag.scroll - delta;
+    wrapScroll();
+  });
+  const endDrag = () => {
+    if (!drag) return;
+    suppressClick = drag.moved;
+    const pointerId = drag.id;
+    drag = null;
+    if (gallery.hasPointerCapture(pointerId)) gallery.releasePointerCapture(pointerId);
+    gallery.classList.remove("is-dragging");
+  };
+  window.addEventListener("pointerup", endDrag, { signal });
+  gallery.addEventListener("pointercancel", endDrag);
+  gallery.addEventListener("lostpointercapture", endDrag);
+  gallery.addEventListener("dragstart", (event) => event.preventDefault());
+  gallery.addEventListener("click", (event) => {
+    if (suppressClick) { event.preventDefault(); suppressClick = false; }
+  }, true);
+  gallery.addEventListener("keydown", (event) => {
+    if (event.target !== gallery) return;
+    const step = gallery.querySelector<HTMLElement>(".work-project")?.offsetWidth ?? 320;
+    let target: number;
+    switch (event.key) {
+      case "ArrowRight": target = gallery.scrollLeft + step; break;
+      case "ArrowLeft": target = gallery.scrollLeft - step; break;
+      case "Home": target = cycle; break;
+      case "End": target = cycle + (originals.at(-1)?.offsetLeft ?? first.offsetLeft) - first.offsetLeft; break;
+      default: return;
+    }
+    event.preventDefault();
+    gallery.scrollTo({ left: target, behavior: "instant" });
+    wrapScroll();
+  });
+
+  gallery.querySelectorAll<HTMLVideoElement>("[data-work-video]").forEach((video) => {
     let visible = false;
-    let manuallyPaused = false;
-    video.controls = false;
-    button.hidden = false;
-
-    const updateLabel = () => {
-      const action = video.paused ? "Play" : "Pause";
-      button.textContent = `${action} video`;
-      button.setAttribute("aria-label", `${action}: ${video.getAttribute("aria-label")}`);
-    };
-    const play = () => {
-      video.play().catch(updateLabel);
-    };
     const syncPlayback = () => {
-      if (visible && !manuallyPaused && !reducedMotion.matches && !document.hidden) {
-        play();
+      if (visible && !reducedMotion.matches && !document.hidden) {
+        void video.play().catch(() => { /* Keep the poster when autoplay is unavailable. */ });
       } else {
         video.pause();
       }
     };
-
-    button.addEventListener("click", () => {
-      if (video.paused) {
-        manuallyPaused = false;
-        play();
-      } else {
-        manuallyPaused = true;
-        video.pause();
-      }
-    }, { signal });
-    video.addEventListener("play", updateLabel, { signal });
-    video.addEventListener("pause", updateLabel, { signal });
     reducedMotion.addEventListener("change", syncPlayback, { signal });
     document.addEventListener("visibilitychange", syncPlayback, { signal });
     const observer = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting && entry.intersectionRatio >= 0.25;
+      visible = !!entry && entry.isIntersecting && entry.intersectionRatio >= 0.25;
       syncPlayback();
-    }, { threshold: 0.25 });
+    }, { threshold: [0, 0.25] });
     observer.observe(video);
     signal.addEventListener("abort", () => {
       observer.disconnect();
       video.pause();
     }, { once: true });
-    updateLabel();
   });
+  signal.addEventListener("abort", () => {
+    cancelAnimationFrame(frame);
+    resizeObserver.disconnect();
+    endDrag();
+  }, { once: true });
+  schedule();
 }
 
 const RAIL_COPIES = 2;
@@ -367,7 +464,7 @@ function initializePage() {
   if (!root) throw new Error("Missing page container");
   const controller = new AbortController();
   const stopScroll = root.querySelector("[data-photo-gallery]") ? undefined : startSmoothScroll();
-  startWorkMedia(root, controller.signal);
+  startWorkGallery(root, controller.signal);
   startGallery(root, controller.signal);
   return () => {
     controller.abort();
