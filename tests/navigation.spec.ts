@@ -13,6 +13,67 @@ async function navigate(page: Page, name: string, path: string) {
   await settled(page, path);
 }
 
+test("notes previews follow the pointer and clean up after navigation", async ({ page }) => {
+  for (const reducedMotion of ["no-preference", "reduce"] as const) {
+    await page.emulateMedia({ reducedMotion });
+    await page.goto("/notes/");
+    const link = page.locator(".notes-list a").filter({ has: page.locator(".note-list-image") }).first();
+    const preview = page.locator(".note-hover-preview");
+    await link.hover({ position: { x: 80, y: 20 } });
+    await expect(preview).toHaveCSS("opacity", "1");
+    await expect.poll(() => preview.locator("img.is-active").evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+    const before = await preview.boundingBox();
+    if (!before) throw new Error("Missing note preview");
+    await link.hover({ position: { x: 240, y: 20 } });
+    await expect.poll(async () => {
+      const rect = await preview.boundingBox();
+      return rect ? rect.x - before.x : 0;
+    }).toBeGreaterThan(5);
+    const date = await link.locator(".note-list-date").boundingBox();
+    if (!date) throw new Error("Missing note date");
+    await expect.poll(async () => {
+      const rect = await preview.boundingBox();
+      return rect ? Math.abs(rect.x + rect.width / 2 - (date.x - 134)) : Infinity;
+    }).toBeLessThan(45);
+    await expect(link).toHaveCSS("background-color", "rgba(23, 23, 18, 0.07)");
+    const firstImage = await preview.locator("img.is-active").elementHandle();
+    const imageCount = await preview.locator("img").count();
+    await page.locator(".notes-list a").filter({ has: page.locator(".note-list-image") }).nth(1).hover();
+    await expect(preview).toHaveCSS("opacity", "1");
+    await expect(preview.locator("img.is-active")).toHaveCount(1);
+    expect(await firstImage?.evaluate(image => image.isConnected)).toBe(true);
+    await expect(preview.locator("img")).toHaveCount(imageCount);
+    await page.mouse.move(0, 0);
+    await expect(preview).toHaveCSS("opacity", "0");
+    await link.focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Shift+Tab");
+    await expect(preview).toHaveCSS("opacity", "1");
+    await navigate(page, "~ SID", "/");
+    await expect(preview).toHaveCount(0);
+    await navigate(page, "NOTES", "/notes/");
+    await expect(preview).toHaveCount(1);
+  }
+});
+
+test("hovered note image moves into the article cover", async ({ page }) => {
+  await page.goto("/notes/");
+  const link = page.locator(".notes-list a").filter({ has: page.locator(".note-list-image") }).first();
+  await link.hover();
+  const preview = page.locator(".note-hover-preview img.is-active");
+  await expect.poll(() => preview.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  const src = await preview.getAttribute("src");
+  await link.click();
+  const flight = page.locator(".note-cover-flight");
+  await expect(flight).toBeVisible();
+  await expect(flight).toHaveAttribute("src", src ?? "");
+  await expect(page.locator(".note-cover")).toHaveCSS("visibility", "hidden");
+  await expect(flight).toHaveCount(0);
+  await expect(page.locator(".note-cover")).toBeVisible();
+  await expect(page.locator("html")).not.toHaveClass(/is-changing/);
+  await expect(page.locator("#swup")).toHaveCount(1);
+});
+
 test("navbar stays mounted and accepts presses across animation completion", async ({ page }) => {
   await page.goto("/");
   const header = await page.locator(".site-header").elementHandle();
@@ -155,7 +216,7 @@ test("work carousel initializes and cleans up across page visits", async ({ page
     expect(await oldGallery?.evaluate(el =>
       Array.from(el.querySelectorAll("video")).every(video => video.paused),
     )).toBe(true);
-    await navigate(page, "SID", "/");
+    await navigate(page, "~ SID", "/");
     await expect(gallery.locator(".work-project")).toHaveCount(projects);
     await expect.poll(() => gallery.evaluate(el => el.scrollLeft)).toBeGreaterThan(0);
   }

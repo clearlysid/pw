@@ -19,6 +19,7 @@
     --accent-font-weight: 400;
     --background: #f7f3eb;
     --button-background: #f0ece5;
+    --nav-button-background: rgba(23, 23, 18, 0.07);
     --button-font-size: 14px;
     --button-font-weight: 500;
     --button-letter-spacing: 0em;
@@ -145,7 +146,8 @@ a {
 }
 
 .site-header {
-    background: linear-gradient(var(--background) 80%, transparent);
+    filter: invert(1);
+    mix-blend-mode: difference;
     left: 0;
     padding: var(--header-top) 0 16px;
     pointer-events: none;
@@ -177,6 +179,25 @@ html.is-changing .transition-page {
 
 #swup.is-next-container { opacity: 0; }
 
+html.is-changing .transition-page :is(h1, [data-page-reveal], .note-cover) {
+    transition: opacity 300ms ease-out var(--reveal-delay, 50ms), translate 360ms cubic-bezier(.22, 1, .36, 1) var(--reveal-delay, 50ms);
+}
+
+[data-page-reveal="1"], .note-cover { --reveal-delay: 120ms; }
+[data-page-reveal="2"] { --reveal-delay: 190ms; }
+[data-page-reveal="3"] { --reveal-delay: 260ms; }
+
+#swup.is-next-container :is(h1, [data-page-reveal], .note-cover) {
+    opacity: 0;
+    translate: 0 12px;
+}
+
+#swup.is-previous-container :is(h1, [data-page-reveal], .note-cover) {
+    opacity: 0;
+    translate: 0 -8px;
+    transition: opacity 160ms ease-out, translate 200ms ease-out;
+}
+
 #swup.is-previous-container {
     position: fixed;
     left: 0;
@@ -197,12 +218,29 @@ html.is-changing { scroll-behavior: auto; }
 }
 
 .site-nav {
+    position: relative;
+    width: fit-content;
+    border-radius: 6px;
     white-space: nowrap;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    left: var(--nav-blur-left, 0px);
+    top: var(--nav-blur-top, 0px);
+    width: var(--nav-blur-width, 0px);
+    height: var(--nav-blur-height, 0px);
+    clip-path: var(--nav-blur-shape);
+    z-index: 39;
+    pointer-events: none;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
 }
 
 .site-nav-links {
     display: grid;
-    grid-template-columns: repeat(3, auto);
+    grid-template-columns: repeat(3, 1fr);
     isolation: isolate;
     position: relative;
 }
@@ -237,7 +275,7 @@ html.is-changing { scroll-behavior: auto; }
 .contact-links a,
 .note-list-date,
 .note-date {
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-size: var(--accent-font-size);
     line-height: 1.4;
     font-weight: var(--accent-font-weight);
@@ -262,12 +300,12 @@ html.is-changing { scroll-behavior: auto; }
     font-family: var(--font-heading);
     font-size: var(--h1-size);
     font-weight: 500;
-    letter-spacing: normal;
+    letter-spacing: -0.02em;
     line-height: var(--h1-leading);
     text-wrap: pretty;
 }
 
-.home-intro h1 { max-width: 720px; letter-spacing: -0.02em; }
+.home-intro h1 { max-width: 720px; }
 
 .home-intro p {
     color: #666258;
@@ -279,7 +317,7 @@ html.is-changing { scroll-behavior: auto; }
 }
 
 .section-label {
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-size: 14px;
     font-weight: 400;
     letter-spacing: normal;
@@ -327,6 +365,7 @@ html.is-changing { scroll-behavior: auto; }
 .work-caption { display: flex; align-items: baseline; gap: 14px; margin-top: 20px; font-size: 12px; line-height: 1.5; color: var(--muted); }
 .work-caption h3 { color: var(--ink); font-size: 15px; font-weight: 500; }
 .work-index { margin-left: auto; font-family: var(--font-mono); }
+.work-caption > span { font-family: var(--font-mono); }
 .work-scrap { position: absolute; z-index: 2; }
 .work-scrap img { width: 100%; height: auto; }
 .work-detail { width: 23%; right: 8%; bottom: 0; rotate: 7deg; }
@@ -427,7 +466,7 @@ html.is-changing { scroll-behavior: auto; }
     background: transparent;
     color: var(--ink);
     cursor: pointer;
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-size: var(--button-font-size);
     font-weight: var(--button-font-weight);
     letter-spacing: var(--button-letter-spacing);
@@ -504,12 +543,22 @@ html.is-changing { scroll-behavior: auto; }
 }
 
 .site-nav .site-nav-links > a::before {
-    background: rgba(23, 23, 18, 0.035);
+    background: var(--nav-button-background);
     transform: none;
+    transition: background-color 150ms ease;
+}
+
+.site-nav .site-nav-links > a::after { background: transparent; }
+
+.site-nav .site-nav-links > a:not([aria-current]):is(:hover, :focus-visible) {
+    color: var(--ink);
+}
+
+.site-nav .site-nav-links > a:not([aria-current]):is(:hover, :focus-visible)::before {
+    background: rgba(23, 23, 18, 0.13);
 }
 
 .site-nav-links > a[aria-current]::before { opacity: 0; }
-.site-nav-links > a[aria-current]::after { background: transparent; }
 
 
 
@@ -537,6 +586,11 @@ button:focus-visible {
     padding-bottom: 120px;
 }
 
+.notes-page > h1 {
+    position: relative;
+    z-index: 2;
+}
+
 .notes-stage {
     margin-top: 48px;
     min-height: 390px;
@@ -546,6 +600,7 @@ button:focus-visible {
 .notes-list {
     list-style: none;
     position: relative;
+    z-index: 2;
 }
 
 .notes-empty { color: var(--muted); }
@@ -555,27 +610,35 @@ button:focus-visible {
     display: grid;
     gap: 12px;
     grid-template-columns: auto minmax(28px, 1fr) auto;
-    min-height: 62px;
+    min-height: 44px;
+    margin-inline: -8px;
+    padding-inline: 8px;
+    border-radius: 6px;
+    transition: background-color 150ms ease;
+}
+
+.notes-list a:is(:hover, :focus-visible) {
+    background-color: var(--nav-button-background);
 }
 
 .note-list-title {
-    font-family: var(--font-heading);
+    font-family: var(--font-text);
     font-size: var(--list-title-size);
-    font-weight: 500;
+    font-weight: 400;
     letter-spacing: normal;
     line-height: var(--list-title-leading);
     transition: opacity 160ms ease;
 }
 
 .note-list-rule {
-    border-top: 1px solid var(--rule);
+    border-top: 1px dashed var(--rule);
     min-width: 28px;
 }
 
 .note-list-date,
 .note-date,
 .note-content figure figcaption {
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     color: var(--muted);
 }
 
@@ -583,36 +646,78 @@ button:focus-visible {
     white-space: nowrap;
 }
 
+.note-list-date,
+.note-date {
+    letter-spacing: -0.04em;
+}
+
 .notes-list a:is(:hover, :focus-visible) .note-list-title {
     opacity: 0.75;
 }
 
-.note-list-image,
 .note-cover {
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 1;
     object-fit: cover;
     position: absolute;
     z-index: 2;
 }
 
-.note-list-image {
-    height: 240px;
-    left: 54%;
-    opacity: 0;
+.note-cover-flight {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 35;
     pointer-events: none;
-    top: calc(100% + 36px);
-    transform: translate3d(-20px, 12px, 0) rotate(-4deg) scale(0.96);
-    transform-origin: left center;
-    transition:
-        opacity 180ms ease,
-        transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: opacity, transform;
-    width: 180px;
+    object-fit: cover;
+    transform-origin: center;
 }
 
-.notes-list a:is(:hover, :focus-visible) .note-list-image {
+.note-cover.is-cover-flight-target {
+    visibility: hidden;
+    translate: none !important;
+    transition: none !important;
+}
+
+.note-list-image {
+    display: none;
+}
+
+.note-hover-preview {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 220px;
+    height: min(220px, calc(100vh - 40px));
+    z-index: 3;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 140ms ease-out;
+    will-change: opacity, transform;
+}
+
+.note-hover-preview.is-visible {
     opacity: 1;
-    transform: translate3d(0, 0, 0) rotate(7deg) scale(1);
+}
+
+.note-hover-mask {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+}
+
+.note-hover-mask img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+}
+
+.note-hover-mask img.is-active {
+    opacity: 1;
+    z-index: 1;
 }
 
 /* Note detail */
@@ -634,10 +739,17 @@ button:focus-visible {
 }
 
 .note-cover {
-    right: -220px;
-    top: 0;
-    transform: rotate(6deg);
-    width: 180px;
+    right: max(var(--page-padding), calc((100% - var(--column)) / 2));
+    top: calc(-1 * (var(--header-top) + var(--nav-height)) - 40px);
+    transform: translateY(var(--cover-scroll-y, 0px)) rotate(3deg);
+    transform-origin: top right;
+    width: 320px;
+    max-width: 40%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.transition-page:has(> .note-cover) .note-hero > header {
+    max-width: calc(100% - 360px);
 }
 
 .note-content {
@@ -649,6 +761,10 @@ button:focus-visible {
 .note-content :is(h2, h3, h4) {
     font-family: var(--font-heading);
     font-weight: 500;
+}
+
+.note-content :is(h1, h2, h3, h4, h5, h6) {
+    letter-spacing: -0.02em;
 }
 
 .note-content p,
@@ -669,7 +785,6 @@ button:focus-visible {
 
 .note-content h3 {
     font-size: 24px;
-    letter-spacing: normal;
     line-height: 1.2;
     margin: 1.8em 0 0.6em;
 }
@@ -795,14 +910,18 @@ pre code {
         padding-top: 0;
     }
 
-    .note-list-image { display: none; }
-
     .note-cover {
-        margin-top: 30px;
-        max-height: 420px;
-        position: static;
-        transform: rotate(3deg);
-        width: min(260px, 72vw);
+        width: 200px;
+        max-width: 45%;
+        top: calc(-1 * (var(--header-top) + var(--nav-height)) - 24px);
+    }
+
+    .transition-page:has(> .note-cover) .note {
+        margin-top: min(180px, 40vw);
+    }
+
+    .transition-page:has(> .note-cover) .note-hero > header {
+        max-width: none;
     }
 
 }
@@ -817,19 +936,6 @@ pre code {
 }
 
 
-@media (min-width: 1280px) {
-    .note-list-image { left: calc(100% + 40px); top: -16px; }
-}
-
-@media (min-width: 781px) and (max-width: 1240px) {
-    .note-cover {
-        position: static;
-        margin-top: 32px;
-        width: 160px;
-        transform: rotate(3deg);
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;
@@ -839,7 +945,11 @@ pre code {
     *::before,
     *::after {
         transition-duration: 0.01ms !important;
+        transition-delay: 0ms !important;
     }
 
+    .transition-page :is(h1, [data-page-reveal], .note-cover) {
+        translate: none !important;
+    }
 
 }

@@ -76,12 +76,12 @@ html.is-changing .transition-gallery-rail {
 }
 
 .gallery-focus {
+    --gallery-nav-offset: max(0px, calc((100% - var(--column)) / 2));
     height: calc(100vh - 256px);
-    left: 50%;
+    left: var(--page-padding);
     position: fixed;
     top: 156px;
-    transform: translateX(-50%);
-    width: calc(100vw - 480px);
+    width: calc(100% - var(--page-padding) * 2);
     z-index: 8;
 }
 
@@ -89,11 +89,11 @@ html.is-changing .transition-gallery-rail {
     align-items: center;
     display: flex;
     flex-direction: column;
-    gap: 8px;
     inset: 0;
-    justify-content: center;
+    justify-content: flex-start;
     opacity: 0;
     position: absolute;
+    padding-top: calc(var(--body-leading) + 16px);
     transition: opacity 180ms ease;
     pointer-events: none;
 }
@@ -104,16 +104,41 @@ html.is-changing .transition-gallery-rail {
 }
 
 .gallery-focus-item img {
-    max-height: calc(100% - 24px);
+    max-height: 100%;
+    max-width: calc(100vw - 480px);
+    flex-shrink: 0;
 }
 
-.gallery-focus-item::after {
-    content: attr(data-caption);
-    font-family: var(--font-sans);
-    font-size: 16px;
-    font-style: italic;
+.gallery-focus-item.is-tall {
+    align-items: flex-start;
+    padding-left: var(--gallery-nav-offset);
+}
+
+.gallery-focus-item.is-tall img {
+    max-width: 100%;
+}
+
+.gallery-focus-item figcaption {
+    position: absolute;
+    top: 0;
+    left: var(--gallery-nav-offset);
+    right: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    font-family: var(--font-text);
+    font-size: var(--body-size);
+    font-weight: 400;
     letter-spacing: normal;
-    line-height: 1;
+    line-height: var(--body-leading);
+}
+
+.gallery-photo-number {
+    opacity: 0.5;
+    font-family: var(--font-mono);
+    font-size: var(--accent-font-size);
+    letter-spacing: -0.04em;
+    flex-shrink: 0;
 }
 
 @media (max-width: 768px) {
@@ -126,7 +151,10 @@ html.is-changing .transition-gallery-rail {
     .gallery-focus {
         height: calc(100vh - 248px);
         top: 112px;
-        width: calc(100vw - 48px);
+    }
+
+    .gallery-focus-item img {
+        max-width: 100%;
     }
 
     .gallery-rail {

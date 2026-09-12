@@ -1,5 +1,6 @@
 import { galleryPhotos } from "./gallery-data";
 import { replacePhotoUrl, startTransitions } from "./transitions";
+import { startNotesHover } from "./notes-hover";
 
 type LenisInstance = {
   readonly scroll: number;
@@ -36,6 +37,22 @@ function startSmoothScroll() {
     cancelAnimationFrame(frameId);
     lenis.destroy();
   };
+}
+
+function startNoteCoverParallax(root: HTMLElement, signal: AbortSignal) {
+  const cover = root.querySelector<HTMLElement>(".note-cover");
+  if (!cover) return;
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  let frame = 0;
+  const render = () => {
+    frame = 0;
+    cover.style.setProperty("--cover-scroll-y", `${reducedMotion.matches ? 0 : Math.max(0, window.scrollY) * 0.15}px`);
+  };
+  const schedule = () => { if (!frame) frame = requestAnimationFrame(render); };
+  window.addEventListener("scroll", schedule, { passive: true, signal });
+  reducedMotion.addEventListener("change", schedule, { signal });
+  signal.addEventListener("abort", () => cancelAnimationFrame(frame), { once: true });
+  render();
 }
 
 function startWorkGallery(root: HTMLElement, signal: AbortSignal) {
@@ -221,7 +238,6 @@ function createGalleryItems(
   galleryPhotos.forEach((photo, index) => {
     const focusItem = document.createElement("figure");
     focusItem.className = "gallery-focus-item";
-    focusItem.dataset.caption = photo.caption;
     focusItem.dataset.galleryFocus = String(index);
     focusItem.setAttribute("aria-hidden", "true");
 
@@ -230,7 +246,12 @@ function createGalleryItems(
     focusImage.decoding = "async";
     focusImage.loading = index === startIndex ? "eager" : "lazy";
     focusImage.src = `https://images.unsplash.com/photo-${photo.id}?auto=format&fit=crop&w=1600&q=86`;
-    focusItem.appendChild(focusImage);
+    const caption = document.createElement("figcaption");
+    const number = document.createElement("span");
+    number.className = "gallery-photo-number";
+    number.textContent = `#${String(index + 1).padStart(3, "0")}`;
+    caption.append(number, ` ${photo.caption}`);
+    focusItem.append(caption, focusImage);
     focusList.appendChild(focusItem);
   });
 
@@ -339,6 +360,7 @@ function startGallery(root: HTMLElement, signal: AbortSignal) {
     }
     void decoded.then(() => {
       if (signal.aborted || activeIndex !== index) return;
+      image.parentElement?.classList.toggle("is-tall", image.naturalWidth <= image.naturalHeight);
       focusItems.forEach((item, itemIndex) => {
         item.classList.toggle("is-active", itemIndex === index);
         item.setAttribute("aria-hidden", String(itemIndex !== index));
@@ -466,6 +488,8 @@ function initializePage() {
   const stopScroll = root.querySelector("[data-photo-gallery]") ? undefined : startSmoothScroll();
   startWorkGallery(root, controller.signal);
   startGallery(root, controller.signal);
+  startNotesHover(root, controller.signal);
+  startNoteCoverParallax(root, controller.signal);
   return () => {
     controller.abort();
     stopScroll?.();
