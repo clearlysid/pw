@@ -55,6 +55,34 @@ function startNoteCoverParallax(root: HTMLElement, signal: AbortSignal) {
   render();
 }
 
+function startHomeParallax(root: HTMLElement, signal: AbortSignal) {
+  const layers = Array.from(root.querySelectorAll<HTMLElement>(".work-gallery, .home-portrait"),
+    element => ({ element, offset: 0, portrait: element.matches(".home-portrait") }));
+  if (!layers.length) return;
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  let frame = 0;
+  const render = () => {
+    frame = 0;
+    const offsets = layers.map(({ element, offset, portrait }) => {
+      const top = element.getBoundingClientRect().top - offset;
+      if (reducedMotion.matches) return 0;
+      return portrait
+        ? Math.max(-60, Math.min(60, (innerHeight - top) * 0.2 - 60))
+        : Math.max(-40, Math.min(40, (innerHeight / 2 - top) * 0.2));
+    });
+    layers.forEach((layer, index) => {
+      layer.offset = offsets[index] ?? 0;
+      layer.element.style.setProperty("--home-scroll-y", `${layer.offset}px`);
+    });
+  };
+  const schedule = () => { if (!frame) frame = requestAnimationFrame(render); };
+  window.addEventListener("scroll", schedule, { passive: true, signal });
+  window.addEventListener("resize", schedule, { signal });
+  reducedMotion.addEventListener("change", schedule, { signal });
+  signal.addEventListener("abort", () => cancelAnimationFrame(frame), { once: true });
+  render();
+}
+
 function startWorkGallery(root: HTMLElement, signal: AbortSignal) {
   const gallery = root.querySelector<HTMLElement>("[data-work-gallery]");
   if (!gallery) return;
@@ -362,6 +390,7 @@ function startGallery(root: HTMLElement, signal: AbortSignal) {
       if (signal.aborted || activeIndex !== index) return;
       image.parentElement?.classList.toggle("is-tall", image.naturalWidth <= image.naturalHeight);
       focusItems.forEach((item, itemIndex) => {
+        item.classList.toggle("is-entering", itemIndex === index && displayedIndex < 0);
         item.classList.toggle("is-active", itemIndex === index);
         item.setAttribute("aria-hidden", String(itemIndex !== index));
       });
@@ -487,6 +516,7 @@ function initializePage() {
   const controller = new AbortController();
   const stopScroll = root.querySelector("[data-photo-gallery]") ? undefined : startSmoothScroll();
   startWorkGallery(root, controller.signal);
+  startHomeParallax(root, controller.signal);
   startGallery(root, controller.signal);
   startNotesHover(root, controller.signal);
   startNoteCoverParallax(root, controller.signal);
